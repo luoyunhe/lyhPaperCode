@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F0F3F6"
+    >
+
+
+    <LinearLayout style="@style/wrap_layout" >
+        <!-- 上圆角-->
+        <LinearLayout style="@style/top_layout"
+            android:id="@+id/private_key_setting">
+            <TextView style="@style/usertext" android:text="私钥设置" />
+            <ImageView style="@style/img_arrow"/>
+        </LinearLayout>
+        <View style="@style/bg_line"/>
+        <!-- 无圆角-->
+        <LinearLayout style="@style/mid_layout"
+            android:id="@+id/add_lock">
+            <TextView style="@style/usertext" android:text="添加锁" />
+            <ImageView style="@style/img_arrow"/>
+        </LinearLayout>
+        <View style="@style/bg_line"/>
+        <!-- 下圆角-->
+        <LinearLayout style="@style/bottom_layout"
+            android:id="@+id/my_lock">
+            <TextView style="@style/usertext" android:text="我的锁" />
+            <ImageView style="@style/img_arrow"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+    <!-- 全圆角-->
+    <!--<LinearLayout style="@style/wrap_layout">-->
+        <!--<LinearLayout style="@style/single_layout">-->
+            <!--<TextView style="@style/usertext" android:text="辅助功能"/>-->
+            <!--<ImageView style="@style/img_arrow"/>-->
+        <!--</LinearLayout>-->
+
+    <!--</LinearLayout>-->
+
+</LinearLayout>

@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">DAppLockerClient</string>
+    <string name="launch_logo_desc">this is a logo</string>
+    <string name="launch_text">正在启动...</string>>
+    <string name="launch_title">DApp locker client</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_home">主页</string>
+    <string name="title_additional_fun">辅助功能</string>
+    <string name="title_setting">设置</string>
+
+</resources>
