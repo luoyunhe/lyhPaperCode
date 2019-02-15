@@ -1,6 +1,8 @@
 package com.lyh.dapplockerclient;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 
@@ -10,7 +12,20 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.http.HttpService;
+
 public class MainActivity extends AppCompatActivity {
+
+    Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+
+            super.handleMessage(msg);
+        }
+
+    };
+
     final private String CLASSNAME = this.getClass().getName();
 
     private HomeFragment homeFragment;

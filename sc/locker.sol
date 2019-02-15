@@ -1,6 +1,7 @@
 pragma solidity >=0.4.22 <0.6.0;
-pragma experimental ABIEncoderV2;
+// pragma experimental ABIEncoderV2;
 
+// import "strings.sol";
 
 contract Locker {
     //合约主人，即锁的拥有者
@@ -78,15 +79,38 @@ contract Locker {
         return false;
     }
     //返回所有用户信息
-    function getUserInfo() public view returns (address, string memory, string memory, address[] memory, string[] memory, string[] memory) {
-        address[] memory addrs = new address[](_users.length);
-        string[] memory names = new string[](_users.length);
-        string[] memory pks = new string[](_users.length);
+    function getUserInfo() public view returns (address, string memory, string memory, string memory, string memory, string memory) {
+
+        string memory addrs;
+        string memory names;// = new string();
+        string memory pks;// = new string();
         for (uint256 i = 0; i < _users.length; i++) {
-            addrs[i] = _users[i].addr;
-            names[i] = _users[i].name;
-            pks[i] = _users[i].pubKey;
+            addrs = strConcat(addrs, convert2String(_users[i].addr));
+            names = strConcat(names, _users[i].name);
+            pks = strConcat(pks, _users[i].pubKey);
         }
         return (_owner, _ownerName, _ownerPubKey, addrs, names, pks);
     }
+    function strConcat(string memory _a, string memory _b) internal pure returns (string memory){
+        bytes memory _ba = bytes(_a);
+        bytes memory _bb = bytes(_b);
+        string memory ret = new string(_ba.length + _bb.length + 1);
+        bytes memory bret = bytes(ret);
+        uint k = 0;
+        for (uint i = 0; i < _ba.length; i++) {
+            bret[k++] = _ba[i];
+        }
+        bret[k++] = '\n';
+        for (uint i = 0; i < _bb.length; i++) {
+            bret[k++] = _bb[i];
+        }
+        return string(bret);
+   }  
+   function convert2String(address addr) internal pure returns (string memory) {
+        uint160 num = uint160(addr);
+        string memory ret = new string(20);
+        bytes memory bret = bytes(ret);
+        assembly { mstore(add(bret, 32), num) }
+        return ret;
+   }
 }

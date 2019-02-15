@@ -107,4 +107,11 @@
         <item name="android:layout_weight">1</item>
     </style>
 
+    <style name="table_layout" parent="Base.Widget.Design.TabLayout">
+        <item name="tabBackground">@color/white</item>
+        <item name="tabIndicatorColor">@color/colorPrimary</item>
+        <item name="tabIndicatorHeight">2dp</item>
+        <item name="tabSelectedTextColor">@color/colorPrimary</item>
+        <item name="android:textSize">15sp</item>
+    </style>
 </resources>

@@ -2,6 +2,7 @@ package com.lyh.dapplockerclient;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
@@ -14,8 +15,11 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.web3j.crypto.CipherException;
@@ -32,6 +36,8 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
+import jnr.ffi.annotations.In;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -45,13 +51,17 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
 
-    private static final String WALLET_FILE_NAME = "wallet_file_name";
+
 
     private final String CLASSNAME = this.getClass().getName();
 
     private ArrayList<LinearLayout> linearLayouts = new ArrayList<>();
 
     private File walletDir = null;
+
+    private Button btnLogout;
+
+    private TextView toLogin;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -91,12 +101,47 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        SharedPreferences sp = getContext().getSharedPreferences("setting", 0);
+        String userName = sp.getString("user_info", "");
+        if (userName.equals("")) {
+            toLogin.setText("点击登陆");
+            toLogin.setClickable(true);
+        } else {
+            toLogin.setText("你好！" + userName);
+            toLogin.setClickable(false);
+            btnLogout.setVisibility(View.VISIBLE);
+        }
+
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_setting, container, false);
         linearLayouts.add((LinearLayout) v.findViewById(R.id.private_key_setting));
         linearLayouts.add((LinearLayout) v.findViewById(R.id.add_lock));
         linearLayouts.add((LinearLayout) v.findViewById(R.id.my_lock));
+        btnLogout = v.findViewById(R.id.btn_logout);
+        toLogin = v.findViewById(R.id.to_login);
+        btnLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SharedPreferences sp = getContext().getSharedPreferences("setting", 0);
+                sp.edit().putString("user_info", "").apply();
+                toLogin.setText("点击登陆");
+                toLogin.setClickable(true);
+                btnLogout.setVisibility(View.INVISIBLE);
+            }
+        });
+        toLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getContext(), LoginActivity.class);
+                startActivity(intent);
+            }
+        });
         for (LinearLayout i : linearLayouts) {
             i.setOnClickListener(this);
         }
@@ -113,6 +158,7 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
                 break;
             case R.id.add_lock:
                 Log.d(CLASSNAME, "click add lock");
+                dealAddLock();
                 break;
             case R.id.my_lock:
                 Log.d(CLASSNAME, "click my lock");
@@ -122,9 +168,14 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
         }
     }
 
+    private void dealAddLock() {
+        Intent intent = new Intent(getContext(), NewLockActivity.class);
+        startActivity(intent);
+    }
+
     private void dealClickPKS() {
         SharedPreferences sp = getContext().getSharedPreferences("setting", 0);
-        String walletFileName = sp.getString(WALLET_FILE_NAME, "");
+        String walletFileName = sp.getString(Util.WALLET_FILE_NAME, "");
         if (walletFileName.equals("")) {
             doNewPKS();
         } else {
@@ -191,7 +242,7 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
                 }
                 SharedPreferences sp = getContext().getSharedPreferences("setting",
                         0);
-                sp.edit().putString(WALLET_FILE_NAME, walletFileName).apply();
+                sp.edit().putString(Util.WALLET_FILE_NAME, walletFileName).apply();
                 Toast.makeText(getContext(), "添加成功！", Toast.LENGTH_LONG);
             }
         });
