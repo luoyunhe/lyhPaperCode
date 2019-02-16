@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<tools:LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".NewLockActivity"
     android:orientation="vertical">
-
+    <LinearLayout
+        style="@style/header_layout"
+        android:background="@color/colorPrimary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            style="@style/header"
+            android:gravity="center_horizontal"
+            android:id="@+id/header_title"
+            android:text="添加锁" />
+    </LinearLayout>
 
 <android.support.design.widget.TabLayout
     style="@style/table_layout"
@@ -21,4 +31,4 @@
     android:layout_height="match_parent"
     android:id="@+id/content"></android.support.v4.view.ViewPager>
 
-</tools:LinearLayout>
+</LinearLayout>

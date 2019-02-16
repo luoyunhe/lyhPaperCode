@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,9 +19,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.JSON;
 import com.lyh.lockersc.Locker_sol_Locker;
 import com.lyh.lockersc.Web3jUtil;
 
+import org.json.JSONObject;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.WalletUtils;
@@ -31,6 +34,7 @@ import org.web3j.tx.gas.DefaultGasProvider;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.cert.CRLReason;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -92,44 +96,42 @@ public class NewLockFragment extends Fragment implements View.OnClickListener {
         new AlertDialog.Builder(getContext())
                 .setTitle("请输入密码")
                 .setView(passwdET)
-                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String passwd = passwdET.getText().toString();
-                        String fileName = Paths.get(Util.getWalletDirString(), walletFileName).toString();
-                        Credentials credentials = null;
-                        try {
-                            credentials = WalletUtils.loadCredentials(passwd, fileName);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (CipherException e) {
-                            e.printStackTrace();
-                            Toast t = Toast.makeText(getContext(), "密码错误，请重新尝试！", Toast.LENGTH_LONG);
-                            t.setGravity(Gravity.CENTER, 0, 0);
-                            t.show();
-                            return;
-                        }
-                        new DeploySC().execute(credentials);
-                        Toast.makeText(getContext(), "合约已经在后台部署！", Toast.LENGTH_LONG).show();
+                .setPositiveButton("确定", (dialog, which) -> {
+                    String passwd = passwdET.getText().toString();
+                    String fileName = Paths.get(Util.getWalletDirString(), walletFileName).toString();
+                    Credentials credentials = null;
+                    try {
+                        credentials = WalletUtils.loadCredentials(passwd, fileName);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (CipherException e) {
+                        e.printStackTrace();
+                        Toast t = Toast.makeText(getContext(), "密码错误，请重新尝试！", Toast.LENGTH_LONG);
+                        t.setGravity(Gravity.CENTER, 0, 0);
+                        t.show();
+                        return;
                     }
-
-
+                    Pair<Credentials, String> pair = new Pair<>(credentials, newLockName);
+                    new DeploySC().execute(pair);
+                    Toast.makeText(getContext(), "合约已经在后台部署！", Toast.LENGTH_LONG).show();
                 })
                 .setNegativeButton("取消", null)
                 .show();
     }
 
-
-     private class DeploySC extends AsyncTask<Credentials, String, Locker_sol_Locker> {
+     private class DeploySC extends AsyncTask<Pair<Credentials, String>, String, Pair<Locker_sol_Locker, String>> {
         @Override
-        protected Locker_sol_Locker doInBackground(Credentials... params) {
-            Credentials credentials = params[0];
-            Locker_sol_Locker result = null;
+        protected Pair<Locker_sol_Locker, String> doInBackground(Pair<Credentials, String>... params) {
+            Pair<Credentials, String> pair = params[0];
+            Credentials credentials = pair.first;
+            Pair<Locker_sol_Locker, String> result = null;
             try {
                 HttpService httpService =  new HttpService(Web3jUtil.INFURA_URL);
                 Web3j web3 = Web3j.build(httpService);
-                result = Locker_sol_Locker.deploy(web3, credentials, new DefaultGasProvider(),
+                Locker_sol_Locker contract = Locker_sol_Locker.deploy(web3, credentials, new DefaultGasProvider(),
                         "pubKey", "lyh").send();
+                result = new Pair<>(contract, pair.second);
+                web3.shutdown();
             } catch (Exception e) {
                 e.printStackTrace();
                 return null;
@@ -139,7 +141,7 @@ public class NewLockFragment extends Fragment implements View.OnClickListener {
         }
 
         @Override
-        protected void onPostExecute(Locker_sol_Locker result) {
+        protected void onPostExecute(Pair<Locker_sol_Locker, String> result) {
             super.onPostExecute(result);
             if (result == null) {
                 new AlertDialog.Builder(getContext())
@@ -149,15 +151,25 @@ public class NewLockFragment extends Fragment implements View.OnClickListener {
                         .show();
                 Toast.makeText(getContext(), "合约部署失败，请重试！", Toast.LENGTH_LONG).show();
             } else {
-                Log.d("sc", "合约地址：" + result.getContractAddress());
-                Toast.makeText(getContext(), result.getContractAddress(), Toast.LENGTH_LONG).show();
+                Log.d("sc", "合约地址：" + result.first.getContractAddress());
+                Toast.makeText(getContext(), result.first.getContractAddress(), Toast.LENGTH_LONG).show();
                 SharedPreferences sp = getContext().getSharedPreferences("setting", 0);
-                sp.edit().putString("sc_addr", result.getContractAddress()).apply();
+                String lockInfoStr = sp.getString(Util.LOCK_INFO_KEY, "[]");
+                Log.d("json before", lockInfoStr);
+                List<LockInfo> lockInfoList = JSON.parseArray(lockInfoStr, LockInfo.class);
+                LockInfo lockInfo = new LockInfo();
+                lockInfo.setName(result.second);
+                lockInfo.setContractAddr(result.first.getContractAddress());
+                lockInfo.setImport(false);
+                lockInfoList.add(lockInfo);
+                lockInfoStr = JSON.toJSONString(lockInfoList);
+                Log.d("json after", lockInfoStr);
+                sp.edit().putString(Util.LOCK_INFO_KEY, lockInfoStr).apply();
 
                 TextView tv = new TextView(getContext());
                 new AlertDialog.Builder(getContext())
                         .setTitle("合约部署结果")
-                        .setMessage("部署成功！地址：" + result.getContractAddress())
+                        .setMessage("部署成功！地址：" + result.first.getContractAddress())
                         .setPositiveButton("确定", null)
                         .show();
             }

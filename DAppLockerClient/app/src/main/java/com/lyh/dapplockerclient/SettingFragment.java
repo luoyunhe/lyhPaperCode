@@ -22,6 +22,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.JSON;
+
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.ECKeyPair;
@@ -104,12 +106,13 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
     public void onResume() {
         super.onResume();
         SharedPreferences sp = getContext().getSharedPreferences("setting", 0);
-        String userName = sp.getString("user_info", "");
-        if (userName.equals("")) {
+        String userInfoJson = sp.getString(Util.USER_INFO_KEY, "");
+        UserInfo userInfo = JSON.parseObject(userInfoJson, UserInfo.class);
+        if (userInfo == null) {
             toLogin.setText("点击登陆");
             toLogin.setClickable(true);
         } else {
-            toLogin.setText("你好！" + userName);
+            toLogin.setText("你好！" + userInfo.getName());
             toLogin.setClickable(false);
             btnLogout.setVisibility(View.VISIBLE);
         }
@@ -129,7 +132,7 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
             @Override
             public void onClick(View v) {
                 SharedPreferences sp = getContext().getSharedPreferences("setting", 0);
-                sp.edit().putString("user_info", "").apply();
+                sp.edit().putString(Util.USER_INFO_KEY, "").apply();
                 toLogin.setText("点击登陆");
                 toLogin.setClickable(true);
                 btnLogout.setVisibility(View.INVISIBLE);
@@ -162,6 +165,8 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
                 break;
             case R.id.my_lock:
                 Log.d(CLASSNAME, "click my lock");
+                Intent intent = new Intent(getContext(), MyLockActivity.class);
+                startActivity(intent);
                 break;
             default:
                 return;

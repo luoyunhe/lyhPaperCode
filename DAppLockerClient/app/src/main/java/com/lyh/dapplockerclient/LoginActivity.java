@@ -9,6 +9,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.JSON;
+
 public class LoginActivity extends Activity implements View.OnClickListener {
 
     private Button btnLogin;
@@ -32,7 +34,10 @@ public class LoginActivity extends Activity implements View.OnClickListener {
             return;
         }
         SharedPreferences sp = getSharedPreferences("setting", 0);
-        sp.edit().putString("user_info", "lyh").commit();
+        UserInfo userInfo = new UserInfo();
+        userInfo.setName(etUserName.getText().toString());
+        sp.edit().putString(Util.USER_INFO_KEY, JSON.toJSONString(userInfo)).commit();
+
 
         finish();
     }

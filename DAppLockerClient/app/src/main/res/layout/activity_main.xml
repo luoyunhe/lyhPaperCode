@@ -17,6 +17,7 @@
             android:layout_height="wrap_content">
             <TextView
                 style="@style/header"
+                android:gravity="center_horizontal"
                 android:id="@+id/header_title"
                 android:text="@string/title_home" />
         </LinearLayout>
