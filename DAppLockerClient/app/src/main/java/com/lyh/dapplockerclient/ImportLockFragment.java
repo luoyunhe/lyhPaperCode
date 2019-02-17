@@ -55,6 +55,7 @@ public class ImportLockFragment extends Fragment implements View.OnClickListener
         btn_new.setOnClickListener(this);
         SharedPreferences sp = getContext().getSharedPreferences("setting", 0);
         String pubKey = sp.getString(Util.USER_PUB_KEY_KEY, "");
+        String ethAddr = sp.getString(Util.USER_ETH_ADDR_KEY, "");
         if (pubKey.equals("")) {
             try {
                 KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(Util.KEY_ALGORITHM);
@@ -78,6 +79,7 @@ public class ImportLockFragment extends Fragment implements View.OnClickListener
         ImportInfo importInfo = new ImportInfo();
         importInfo.setUserName(userInfo.getName());
         importInfo.setUserPubKey(pubKey);
+        importInfo.setUserAddr(ethAddr);
         String importInfoJson = JSON.toJSONString(importInfo);
         etImportInfo.setText(importInfoJson);
 

@@ -79,13 +79,15 @@ contract Locker {
         return false;
     }
     //返回所有用户信息
-    function getUserInfo() public view returns (address, string memory, string memory, string memory, string memory, string memory) {
+    function getUserInfo() public view returns (address, string memory, string memory, address[] memory, string memory, string memory) {
 
-        string memory addrs;
+        // string memory addrs;
         string memory names;// = new string();
         string memory pks;// = new string();
+        address[] memory addrs = new address[](_users.length);
         for (uint256 i = 0; i < _users.length; i++) {
-            addrs = strConcat(addrs, convert2String(_users[i].addr));
+            // addrs = strConcat(addrs, convert2String(_users[i].addr));
+            addrs[i] = _users[i].addr;
             names = strConcat(names, _users[i].name);
             pks = strConcat(pks, _users[i].pubKey);
         }
@@ -106,11 +108,27 @@ contract Locker {
         }
         return string(bret);
    }  
-   function convert2String(address addr) internal pure returns (string memory) {
-        uint160 num = uint160(addr);
-        string memory ret = new string(20);
-        bytes memory bret = bytes(ret);
-        assembly { mstore(add(bret, 32), num) }
-        return ret;
-   }
+//    function convert2String(address addr) internal pure returns (string memory) {
+//         uint160 num = uint160(addr);
+//         string memory ret = new string(20);
+//         bytes memory bret = bytes(ret);
+//         assembly { mstore(add(bret, 20), num) }
+//         return ret;
+//    }
+//     function uint2str(uint i) internal pure returns (string memory c) {
+//         if (i == 0) return "0";
+//         uint j = i;
+//         uint length;
+//         while (j != 0){
+//             length++;
+//             j /= 10;
+//         }
+//         bytes memory bstr = new bytes(20);
+//         uint k = length - 1;
+//         while (i != 0){
+//             bstr[k--] = byte(48 + i % 10);
+//             i /= 10;
+//         }
+//         c = string(bstr);
+//     }
 }

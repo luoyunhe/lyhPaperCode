@@ -1,8 +1,10 @@
 package com.lyh.dapplockerclient;
 
 public class ImportInfo {
+    private String userAddr;
     private String userPubKey;
     private String userName;
+
 
     public String getUserPubKey() {
         return userPubKey;
@@ -18,5 +20,13 @@ public class ImportInfo {
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public String getUserAddr() {
+        return userAddr;
+    }
+
+    public void setUserAddr(String userAddr) {
+        this.userAddr = userAddr;
     }
 }

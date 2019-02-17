@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".LockModifyActivity">
+    <LinearLayout
+        style="@style/header_layout"
+        android:background="@color/colorPrimary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            style="@style/header"
+            android:gravity="center_horizontal"
+            android:id="@+id/header_title"
+            android:text="锁信息" />
+    </LinearLayout>
+    <LinearLayout
+        style="@style/mid_layout"
+        android:orientation="horizontal"
+        >
+        <TextView
+            style="@style/usertext"
+            android:text="名称："/>
+        <TextView
+            android:id="@+id/lock_name"
+            style="@style/usertext"
+            android:layout_weight="1"/>
+    </LinearLayout>
+    <View style="@style/bg_line"/>
+    <LinearLayout
+        style="@style/mid_layout"
+        android:orientation="horizontal"
+        >
+        <TextView
+            style="@style/usertext"
+            android:text="地址："/>
+        <TextView
+            android:id="@+id/lock_contract_addr"
+            style="@style/usertext"
+            android:layout_weight="1"/>
+    </LinearLayout>
+    <View style="@style/bg_line"/>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/user_list_container"
+        >
+
+    </RelativeLayout>
+    <Button
+        android:id="@+id/btn_add_user"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="添加用户"
+        android:textSize="25sp"
+        android:layout_marginTop="40dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        android:background="@color/colorPrimary"
+        />
+    <Button
+        android:id="@+id/btn_delete_lock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="删除该锁"
+        android:textSize="25sp"
+        android:layout_marginTop="40dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        android:background="@color/colorAccent"
+        />
+
+</LinearLayout>

@@ -1,12 +1,14 @@
 package com.lyh.dapplockerclient;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -20,6 +22,10 @@ import java.util.List;
 public class MyLockActivity extends AppCompatActivity {
 
     private RelativeLayout container;
+    private ArrayList<LockInfo> newLockInfoList;
+    private ArrayList<LockInfo> importLockInfoList;
+    private AndroidTreeView tView;
+    private TreeNode nodeInvoke;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,8 +34,8 @@ public class MyLockActivity extends AppCompatActivity {
         SharedPreferences sp = getSharedPreferences("setting", 0);
         String lockInfoListStr = sp.getString(Util.LOCK_INFO_KEY, "[]");
         List<LockInfo> lockInfoList = JSON.parseArray(lockInfoListStr, LockInfo.class);
-        ArrayList<LockInfo> newLockInfoList = new ArrayList<>();
-        ArrayList<LockInfo> importLockInfoList = new ArrayList<>();
+        newLockInfoList = new ArrayList<>();
+        importLockInfoList = new ArrayList<>();
         for (LockInfo i : lockInfoList) {
             if (i.isImport()) {
                 importLockInfoList.add(i);
@@ -44,6 +50,11 @@ public class MyLockActivity extends AppCompatActivity {
 
         for (LockInfo i : newLockInfoList) {
             TreeNode node = new TreeNode(new LockHolder.LockItem(i.getName(), i.getContractAddr())).setViewHolder(new LockHolder(this));
+
+
+
+
+
             newLockItem.addChild(node);
         }
         for (LockInfo i : importLockInfoList) {
@@ -51,19 +62,63 @@ public class MyLockActivity extends AppCompatActivity {
             importLockItem.addChild(node);
         }
 
-
-
-
         root.addChildren(newLockItem, importLockItem);
 
+        tView = new AndroidTreeView(this, root);
+        tView.setDefaultNodeClickListener((node, value) -> {
+            if (node.getLevel() != 2) {
+                return;
+            }
+            LockInfo item;
+            if (node.getParent().getId() == 1) {
+                item = newLockInfoList.get(node.getId() - 1);
+            } else {
+                item = importLockInfoList.get(node.getId() - 1);
+            }
+            Intent intent = new Intent(MyLockActivity.this, LockModifyActivity.class);
 
+            intent.putExtra("lock_info", item);
+            nodeInvoke = node;
+            startActivityForResult(intent, node.getId() - 1);
 
-
-        AndroidTreeView tView = new AndroidTreeView(this, root);
+        });
         container.addView(tView.getView());
-        EditText et = new EditText(this);
+    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        SharedPreferences sp = getSharedPreferences("setting", 0);
+        ArrayList<LockInfo> list = new ArrayList<>();
+        list.addAll(newLockInfoList);
+        list.addAll(importLockInfoList);
+        String lockInfoListStr = JSON.toJSONString(list);
+        sp.edit().putString(Util.LOCK_INFO_KEY, lockInfoListStr).commit();
+    }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        LockInfo info = data.getParcelableExtra("lock_info");
+        if (resultCode == 0) {
+            Log.d(getClass().getName(), info.getContractAddr());
+            LockHolder holder = (LockHolder) nodeInvoke.getViewHolder();
+            holder.tvContractAddr.setText(info.getContractAddr());
+            if (info.isImport()) {
+                importLockInfoList.set(requestCode, info);
+
+            } else {
+                newLockInfoList.set(requestCode, info);
+            }
+        } else {
+            tView.removeNode(nodeInvoke);
+            if (info.isImport()) {
+                importLockInfoList.remove(requestCode);
+            } else {
+                newLockInfoList.remove(requestCode);
+            }
+
+        }
     }
 }
 class LockContainerHolder extends TreeNode.BaseNodeViewHolder<LockContainerHolder.LockContainerItem> {
@@ -73,6 +128,7 @@ class LockContainerHolder extends TreeNode.BaseNodeViewHolder<LockContainerHolde
     public LockContainerHolder(Context context) {
         super(context);
     }
+
 
     @Override
     public View createNodeView(final TreeNode node, LockContainerItem value) {
@@ -105,7 +161,7 @@ class LockContainerHolder extends TreeNode.BaseNodeViewHolder<LockContainerHolde
 }
 
 class LockHolder extends TreeNode.BaseNodeViewHolder<LockHolder.LockItem> {
-    private TextView tvName, tvContractAddr;
+    public TextView tvName, tvContractAddr;
     private TextView tvSign;
 
 
@@ -119,19 +175,20 @@ class LockHolder extends TreeNode.BaseNodeViewHolder<LockHolder.LockItem> {
         final View view = inflater.inflate(R.layout.layout_lock_node, null, false);
         tvName = view.findViewById(R.id.name);
         tvContractAddr = view.findViewById(R.id.contract_addr);
-        tvSign = view.findViewById(R.id.node_sign);
+//        tvSign = view.findViewById(R.id.node_sign);
         tvName.setText(value.name);
+//        tvSign.setText(">");
         tvContractAddr.setText(value.contractAddr.equals("") ? "未激活" : value.contractAddr);
         return view;
     }
 
     @Override
     public void toggle(boolean active) {
-        if (active) {
-            tvSign.setText("-");
-        } else {
-            tvSign.setText("+");
-        }
+//        if (active) {
+//            tvSign.setText("-");
+//        } else {
+//            tvSign.setText("+");
+//        }
     }
 
     public static class LockItem {

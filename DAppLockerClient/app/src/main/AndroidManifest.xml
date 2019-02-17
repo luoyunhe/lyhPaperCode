@@ -24,8 +24,9 @@
             android:name=".MainActivity"
             android:label="@string/title_activity_main" />
         <activity android:name=".NewLockActivity" />
-        <activity android:name=".LoginActivity"></activity>
-        <activity android:name=".MyLockActivity"></activity>
+        <activity android:name=".LoginActivity" />
+        <activity android:name=".MyLockActivity" />
+        <activity android:name=".LockModifyActivity"></activity>
     </application>
 
 </manifest>

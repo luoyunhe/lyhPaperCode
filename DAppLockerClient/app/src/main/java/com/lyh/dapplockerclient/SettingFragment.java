@@ -194,27 +194,27 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
         new AlertDialog.Builder(getContext())
             .setTitle("请输入密码")
             .setView(passwdET)
-            .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    String passwd = passwdET.getText().toString();
-                    String fileName = Paths.get(getWalletDirString(), walletFileName).toString();
-                    Credentials credentials = null;
-                    try {
-                        credentials = WalletUtils.loadCredentials(passwd, fileName);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (CipherException e) {
-                        e.printStackTrace();
-                        Toast t = Toast.makeText(getContext(), "密码错误，请重新尝试！", Toast.LENGTH_LONG);
-                        t.setGravity(Gravity.CENTER, 0, 0);
-                        t.show();
-                        return;
-                    }
-                    Toast t = Toast.makeText(getContext(), "已经设置的私钥地址是：" + credentials.getAddress(), Toast.LENGTH_LONG);
+            .setPositiveButton("确定", (dialog, which) -> {
+                String passwd = passwdET.getText().toString();
+                String fileName = Paths.get(getWalletDirString(), walletFileName).toString();
+                Credentials credentials = null;
+                try {
+                    credentials = WalletUtils.loadCredentials(passwd, fileName);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (CipherException e) {
+                    e.printStackTrace();
+                    Toast t = Toast.makeText(getContext(), "密码错误，请重新尝试！", Toast.LENGTH_LONG);
                     t.setGravity(Gravity.CENTER, 0, 0);
                     t.show();
+                    return;
                 }
+                SharedPreferences sp = getContext().getSharedPreferences("setting",
+                        0);
+                sp.edit().putString(Util.USER_ETH_ADDR_KEY, credentials.getAddress()).apply();
+                Toast t = Toast.makeText(getContext(), "已经设置的私钥地址是：" + credentials.getAddress(), Toast.LENGTH_LONG);
+                t.setGravity(Gravity.CENTER, 0, 0);
+                t.show();
             })
             .setNegativeButton("取消", null)
             .show();
@@ -248,6 +248,7 @@ public class SettingFragment extends Fragment implements View.OnClickListener {
                 SharedPreferences sp = getContext().getSharedPreferences("setting",
                         0);
                 sp.edit().putString(Util.WALLET_FILE_NAME, walletFileName).apply();
+                sp.edit().putString(Util.USER_ETH_ADDR_KEY, credentials.getAddress()).apply();
                 Toast.makeText(getContext(), "添加成功！", Toast.LENGTH_LONG);
             }
         });
