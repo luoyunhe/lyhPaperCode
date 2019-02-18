@@ -90,8 +90,18 @@ public class MyLockActivity extends AppCompatActivity {
         super.onPause();
         SharedPreferences sp = getSharedPreferences("setting", 0);
         ArrayList<LockInfo> list = new ArrayList<>();
-        list.addAll(newLockInfoList);
-        list.addAll(importLockInfoList);
+        for (LockInfo i : newLockInfoList) {
+            if (i != null) {
+                list.add(i);
+            }
+        }
+        for (LockInfo i : importLockInfoList) {
+            if (i != null) {
+                list.add(i);
+            }
+        }
+//        list.addAll(newLockInfoList);
+//        list.addAll(importLockInfoList);
         String lockInfoListStr = JSON.toJSONString(list);
         sp.edit().putString(Util.LOCK_INFO_KEY, lockInfoListStr).commit();
     }
@@ -113,9 +123,11 @@ public class MyLockActivity extends AppCompatActivity {
         } else {
             tView.removeNode(nodeInvoke);
             if (info.isImport()) {
-                importLockInfoList.remove(requestCode);
+                importLockInfoList.set(requestCode, null);
+//                importLockInfoList.remove(requestCode);
             } else {
-                newLockInfoList.remove(requestCode);
+//                newLockInfoList.remove(requestCode);
+                newLockInfoList.set(requestCode, null);
             }
 
         }
