@@ -1,7 +1,8 @@
 apply plugin: 'com.android.application'
-
+apply plugin: 'org.greenrobot.greendao'
 android {
     compileSdkVersion 28
+    buildToolsVersion "28.0.3"
     defaultConfig {
         applicationId "com.lyh.dapplockerclient"
         minSdkVersion 26
@@ -33,6 +34,7 @@ dependencies {
     implementation 'org.web3j:core:4.1.0-android'
     implementation 'com.alibaba:fastjson:1.1.70.android'
     implementation 'com.github.bmelnychuk:atv:1.2.+'
+    implementation 'org.greenrobot:greendao:3.2.2'
 //    implementation project(':library')
     implementation 'com.github.johnkil.print:print:1.2.2'
     testImplementation 'junit:junit:4.12'

@@ -153,18 +153,18 @@ public class NewLockFragment extends Fragment implements View.OnClickListener {
             } else {
                 Log.d("sc", "合约地址：" + result.first.getContractAddress());
                 Toast.makeText(getContext(), result.first.getContractAddress(), Toast.LENGTH_LONG).show();
-                SharedPreferences sp = getContext().getSharedPreferences("setting", 0);
-                String lockInfoStr = sp.getString(Util.LOCK_INFO_KEY, "[]");
-                Log.d("json before", lockInfoStr);
-                List<LockInfo> lockInfoList = JSON.parseArray(lockInfoStr, LockInfo.class);
+
                 LockInfo lockInfo = new LockInfo();
                 lockInfo.setName(result.second);
                 lockInfo.setContractAddr(result.first.getContractAddress());
                 lockInfo.setImport(false);
-                lockInfoList.add(lockInfo);
-                lockInfoStr = JSON.toJSONString(lockInfoList);
-                Log.d("json after", lockInfoStr);
-                sp.edit().putString(Util.LOCK_INFO_KEY, lockInfoStr).apply();
+
+
+
+                DaoSession daoSession =  GreenDaoManager.getInstance().getDaoSession();
+                LockInfoDao lockInfoDao = daoSession.getLockInfoDao();
+                lockInfoDao.insert(lockInfo);
+
 
                 TextView tv = new TextView(getContext());
                 new AlertDialog.Builder(getContext())

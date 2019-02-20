@@ -99,18 +99,14 @@ public class ImportLockFragment extends Fragment implements View.OnClickListener
                 ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData clipData = ClipData.newPlainText(null, info);
                 clipboard.setPrimaryClip(clipData);
-                SharedPreferences sp = getContext().getSharedPreferences("setting", 0);
-                String lockInfoStr = sp.getString(Util.LOCK_INFO_KEY, "[]");
-                Log.d("json before", lockInfoStr);
-                List<LockInfo> lockInfoList = JSON.parseArray(lockInfoStr, LockInfo.class);
+
                 LockInfo lockInfo = new LockInfo();
                 lockInfo.setName(lockName);
                 lockInfo.setImport(true);
                 lockInfo.setContractAddr("");
-                lockInfoList.add(lockInfo);
-                lockInfoStr = JSON.toJSONString(lockInfoList);
-                Log.d("json after", lockInfoStr);
-                sp.edit().putString(Util.LOCK_INFO_KEY, lockInfoStr).apply();
+
+                GreenDaoManager.getInstance().getDaoSession().getLockInfoDao().insert(lockInfo);
+
 
                 getActivity().finish();
                 break;

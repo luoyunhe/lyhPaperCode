@@ -22,6 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.lyh.lockersc.Locker_sol_Locker;
 import com.lyh.lockersc.Web3jUtil;
 import com.unnamed.b.atv.model.TreeNode;
@@ -39,7 +40,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 
-import static com.alibaba.fastjson.JSON.parseObject;
 
 public class LockModifyActivity extends AppCompatActivity {
 
@@ -56,7 +56,7 @@ public class LockModifyActivity extends AppCompatActivity {
 
     TreeNode userList;
 
-    private Button btnDelLock, btnAddUser;
+    private Button btnDelLock, btnAddUser, btnBindLock;
     LockInfo info;
     void getUserList() {
         isRunning = true;
@@ -123,10 +123,13 @@ public class LockModifyActivity extends AppCompatActivity {
         name = findViewById(R.id.lock_name);
         btnDelLock = findViewById(R.id.btn_delete_lock);
         btnDelLock.setOnClickListener(v -> {
-            Intent i = new Intent();
-            i.putExtra("lock_info", info);
-            setResult(-1, i);
+            LockInfoDao dao = GreenDaoManager.getInstance().getDaoSession().getLockInfoDao();
+            dao.deleteByKey(info.getId());
             finish();
+        });
+        btnBindLock = findViewById(R.id.btn_bind_lock);
+        btnBindLock.setOnClickListener((v) -> {
+            //TODO
         });
         btnAddUser = findViewById(R.id.btn_add_user);
         if (!info.isImport()) {
@@ -191,6 +194,8 @@ public class LockModifyActivity extends AppCompatActivity {
                          .setPositiveButton("激活", (dialog, which) -> {
                              String str = input.getText().toString();
                              info.setContractAddr(str);
+                             LockInfoDao dao = GreenDaoManager.getInstance().getDaoSession().getLockInfoDao();
+                             dao.update(info);
                              contractAddr.setText(str);
                              contractAddr.setClickable(false);
                          })
@@ -203,13 +208,6 @@ public class LockModifyActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    public void onBackPressed() {
-        Intent intent = new Intent();
-        intent.putExtra("lock_info", info);
-        setResult(0, intent);
-        super.onBackPressed();
-    }
     class AddUserTask extends AsyncTask<Pair<String[], Credentials>, String, String> {
 
 
@@ -271,14 +269,16 @@ public class LockModifyActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Tuple6<String, String, String, List<String>, String, String> res) {
             super.onPostExecute(res);
+            List<String> addrs = res.getValue4();
             String names = res.getValue5();
             String pubKeys = res.getValue6();
             String[] nameArr = names.split("\n");
             String[] pubKeyArr = pubKeys.split("\n");
             for (int i = 0; i < nameArr.length; i++) {
                 if (nameArr[i].equals("")) continue;
-                TreeNode node = new TreeNode(new UserHolder.UserItem(nameArr[i], pubKeyArr[i]))
-                        .setViewHolder(new UserHolder(LockModifyActivity.this));
+
+                TreeNode node = new TreeNode(new UserItem(nameArr[i], pubKeyArr[i], addrs.get(i - 1)))
+                        .setViewHolder(LockModifyActivity.this.new UserHolder(LockModifyActivity.this));
                 userList.addChild(node);
             }
 
@@ -288,10 +288,76 @@ public class LockModifyActivity extends AppCompatActivity {
             Log.d("res", res.getValue4().toString());
             Log.d("res", res.getValue5());
             Log.d("res", res.getValue6());
+            userList.getViewHolder().toggle(false);
+            userList.getViewHolder().toggle(true);
             isRunning = false;
         }
     }
+    class DelUserTask extends AsyncTask<String, String, String> {
 
+        @Override
+        protected String doInBackground(String... params) {
+            String userAddr = params[0];
+            HttpService httpService =  new HttpService(Web3jUtil.INFURA_URL);
+            Web3j web3 = Web3j.build(httpService);
+            Locker_sol_Locker contract = Locker_sol_Locker.load(info.getContractAddr(),
+                    web3, credentials, new DefaultGasProvider());
+            try {
+                contract.delUser(userAddr).send();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+    }
+    class UserHolder extends TreeNode.BaseNodeViewHolder<UserItem> {
+        public TextView tvName, tvPubKey, tvSign;
+        private Context context;
+
+
+        public UserHolder(Context context) {
+            super(context);
+            this.context = context;
+        }
+
+        @Override
+        public View createNodeView(final TreeNode node, UserItem value) {
+            final LayoutInflater inflater = LayoutInflater.from(context);
+            final View view = inflater.inflate(R.layout.layout_user_node, null, false);
+            tvName = view.findViewById(R.id.name);
+            tvPubKey = view.findViewById(R.id.pub_key);
+            tvSign = view.findViewById(R.id.node_del);
+
+            tvSign.setOnClickListener((v) -> {
+                new AlertDialog.Builder(context)
+                        .setTitle("警告")
+                        .setMessage("是否删除")
+                        .setPositiveButton("确定", ((dialog, which) -> {
+                            String userAddr = value.address;
+                            new DelUserTask().execute(userAddr);
+                            treeView.removeNode(node);
+                        }))
+                        .setNegativeButton("取消", null).show();
+
+            });
+
+            tvName.setText(value.name);
+            tvPubKey.setText(value.pubKey.substring(0, 25) + "...");
+            return view;
+        }
+    }
+    public static class UserItem {
+        public String name;
+        public String pubKey;
+        public String address;
+
+        public UserItem(String name, String pubKey, String address) {
+            this.name = name;
+            this.pubKey = pubKey;
+            this.address = address;
+        }
+    }
 }
 class UserContainerHolder extends TreeNode.BaseNodeViewHolder<UserContainerHolder.Item> {
     private TextView tvValue;
@@ -331,34 +397,3 @@ class UserContainerHolder extends TreeNode.BaseNodeViewHolder<UserContainerHolde
     }
 }
 
-class UserHolder extends TreeNode.BaseNodeViewHolder<UserHolder.UserItem> {
-    public TextView tvName, tvPubKey;
-
-
-    public UserHolder(Context context) {
-        super(context);
-    }
-
-    @Override
-    public View createNodeView(final TreeNode node, UserItem value) {
-        final LayoutInflater inflater = LayoutInflater.from(context);
-        final View view = inflater.inflate(R.layout.layout_user_node, null, false);
-        tvName = view.findViewById(R.id.name);
-        tvPubKey = view.findViewById(R.id.pub_key);
-
-        tvName.setText(value.name);
-        tvPubKey.setText(value.pubKey.substring(0, 25) + "...");
-        return view;
-    }
-
-
-    public static class UserItem {
-        public String name;
-        public String pubKey;
-
-        public UserItem(String name, String pubKey) {
-            this.name = name;
-            this.pubKey = pubKey;
-        }
-    }
-}

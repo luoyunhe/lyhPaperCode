@@ -3,10 +3,43 @@ package com.lyh.dapplockerclient;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.greenrobot.greendao.annotation.Entity;
+import org.greenrobot.greendao.annotation.Id;
+import org.greenrobot.greendao.annotation.Property;
+import org.greenrobot.greendao.annotation.Generated;
+
+
+@Entity
 public class LockInfo implements Parcelable {
+
+    @Id(autoincrement = true)
+    private Long id;
+
+    @Property(nameInDb = "name")
     private String name;
+
+    @Property(nameInDb = "contract_addr")
     private String contractAddr;
+
+    @Property(nameInDb = "is_import")
     private boolean isImport;
+
+    public LockInfo(String name, String contractAddr, boolean isImport) {
+        super();
+        this.name = name;
+        this.contractAddr = contractAddr;
+        this.isImport = isImport;
+    }
+
+    public LockInfo(){super();}
+
+    @Generated(hash = 442212399)
+    public LockInfo(Long id, String name, String contractAddr, boolean isImport) {
+        this.id = id;
+        this.name = name;
+        this.contractAddr = contractAddr;
+        this.isImport = isImport;
+    }
 
     public String getName() {
         return name;
@@ -39,6 +72,7 @@ public class LockInfo implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(id);
         dest.writeString(name);
         dest.writeString(contractAddr);
         dest.writeByte((byte) (isImport ? 1 : 0));
@@ -48,6 +82,7 @@ public class LockInfo implements Parcelable {
         @Override
         public LockInfo createFromParcel(Parcel source) {
             LockInfo info = new LockInfo();
+            info.setId(source.readLong());
             info.setName(source.readString());
             info.setContractAddr(source.readString());
             info.setImport(source.readByte() != 0);
@@ -59,4 +94,20 @@ public class LockInfo implements Parcelable {
             return new LockInfo[0];
         }
     };
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public boolean getIsImport() {
+        return this.isImport;
+    }
+
+    public void setIsImport(boolean isImport) {
+        this.isImport = isImport;
+    }
 }

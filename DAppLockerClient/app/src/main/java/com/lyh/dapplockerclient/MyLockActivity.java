@@ -26,14 +26,21 @@ public class MyLockActivity extends AppCompatActivity {
     private ArrayList<LockInfo> importLockInfoList;
     private AndroidTreeView tView;
     private TreeNode nodeInvoke;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_lock);
         container = findViewById(R.id.container);
-        SharedPreferences sp = getSharedPreferences("setting", 0);
-        String lockInfoListStr = sp.getString(Util.LOCK_INFO_KEY, "[]");
-        List<LockInfo> lockInfoList = JSON.parseArray(lockInfoListStr, LockInfo.class);
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        container.removeAllViews();
+        LockInfoDao dao = GreenDaoManager.getInstance().getDaoSession().getLockInfoDao();
+        List<LockInfo> lockInfoList = dao.queryBuilder().build().list();
         newLockInfoList = new ArrayList<>();
         importLockInfoList = new ArrayList<>();
         for (LockInfo i : lockInfoList) {
@@ -50,11 +57,6 @@ public class MyLockActivity extends AppCompatActivity {
 
         for (LockInfo i : newLockInfoList) {
             TreeNode node = new TreeNode(new LockHolder.LockItem(i.getName(), i.getContractAddr())).setViewHolder(new LockHolder(this));
-
-
-
-
-
             newLockItem.addChild(node);
         }
         for (LockInfo i : importLockInfoList) {
@@ -79,58 +81,10 @@ public class MyLockActivity extends AppCompatActivity {
 
             intent.putExtra("lock_info", item);
             nodeInvoke = node;
-            startActivityForResult(intent, node.getId() - 1);
+            startActivity(intent);
 
         });
         container.addView(tView.getView());
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        SharedPreferences sp = getSharedPreferences("setting", 0);
-        ArrayList<LockInfo> list = new ArrayList<>();
-        for (LockInfo i : newLockInfoList) {
-            if (i != null) {
-                list.add(i);
-            }
-        }
-        for (LockInfo i : importLockInfoList) {
-            if (i != null) {
-                list.add(i);
-            }
-        }
-//        list.addAll(newLockInfoList);
-//        list.addAll(importLockInfoList);
-        String lockInfoListStr = JSON.toJSONString(list);
-        sp.edit().putString(Util.LOCK_INFO_KEY, lockInfoListStr).commit();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        LockInfo info = data.getParcelableExtra("lock_info");
-        if (resultCode == 0) {
-            Log.d(getClass().getName(), info.getContractAddr());
-            LockHolder holder = (LockHolder) nodeInvoke.getViewHolder();
-            holder.tvContractAddr.setText(info.getContractAddr());
-            if (info.isImport()) {
-                importLockInfoList.set(requestCode, info);
-
-            } else {
-                newLockInfoList.set(requestCode, info);
-            }
-        } else {
-            tView.removeNode(nodeInvoke);
-            if (info.isImport()) {
-                importLockInfoList.set(requestCode, null);
-//                importLockInfoList.remove(requestCode);
-            } else {
-//                newLockInfoList.remove(requestCode);
-                newLockInfoList.set(requestCode, null);
-            }
-
-        }
     }
 }
 class LockContainerHolder extends TreeNode.BaseNodeViewHolder<LockContainerHolder.LockContainerItem> {
