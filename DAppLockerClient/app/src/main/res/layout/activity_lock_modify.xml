@@ -51,10 +51,10 @@
 
     </RelativeLayout>
     <Button
-        android:id="@+id/btn_bind_lock"
+        android:id="@+id/btn_add_user"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="绑定锁"
+        android:text="添加用户"
         android:textSize="25sp"
         android:layout_marginTop="40dp"
         android:layout_marginStart="40dp"
@@ -62,10 +62,10 @@
         android:background="@color/colorPrimary"
         />
     <Button
-        android:id="@+id/btn_add_user"
+        android:id="@+id/btn_bind_lock"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="添加用户"
+        android:text="绑定到设备"
         android:textSize="25sp"
         android:layout_marginTop="40dp"
         android:layout_marginStart="40dp"

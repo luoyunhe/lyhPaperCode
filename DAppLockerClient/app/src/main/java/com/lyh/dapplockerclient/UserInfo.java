@@ -3,6 +3,7 @@ package com.lyh.dapplockerclient;
 public class UserInfo {
     private String name;
 
+
     public String getName() {
         return name;
     }
@@ -10,4 +11,5 @@ public class UserInfo {
     public void setName(String name) {
         this.name = name;
     }
+
 }

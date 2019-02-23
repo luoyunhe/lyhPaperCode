@@ -33,7 +33,13 @@ import org.web3j.tx.gas.DefaultGasProvider;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CRLReason;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.Base64;
 import java.util.List;
 
 /**
@@ -88,6 +94,27 @@ public class NewLockFragment extends Fragment implements View.OnClickListener {
             Toast.makeText(getContext(), "未设置私钥！", Toast.LENGTH_LONG).show();
             return;
         }
+        String userInfoStr = sp.getString(Util.USER_INFO_KEY, "");
+        UserInfo info = JSON.parseObject(userInfoStr, UserInfo.class);
+
+        String pubKeyStr = sp.getString(Util.USER_PUB_KEY_KEY, "");
+        if (pubKeyStr.equals("")) {
+            try {
+                KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(Util.KEY_ALGORITHM);
+                keyPairGenerator.initialize(512);
+                KeyPair keyPair = keyPairGenerator.generateKeyPair();
+                RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+                RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+                String pubStr = Base64.getEncoder().encodeToString(publicKey.getEncoded());
+                pubKeyStr = pubStr;
+                String priStr = Base64.getEncoder().encodeToString(privateKey.getEncoded());
+                sp.edit().putString(Util.USER_PUB_KEY_KEY, pubStr)
+                        .putString(Util.USER_PRI_KEY_KEY, priStr).apply();
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+        }
+        final String pubKey = pubKeyStr;
 
         String newLockName = etNewLock.getText().toString();
 
@@ -111,7 +138,12 @@ public class NewLockFragment extends Fragment implements View.OnClickListener {
                         t.show();
                         return;
                     }
-                    Pair<Credentials, String> pair = new Pair<>(credentials, newLockName);
+
+                    String[] tmp = new String[3];
+                    tmp[0] = newLockName;
+                    tmp[1] = info.getName();
+                    tmp[2] = pubKey;
+                    Pair<Credentials, String[]> pair = new Pair<>(credentials, tmp);
                     new DeploySC().execute(pair);
                     Toast.makeText(getContext(), "合约已经在后台部署！", Toast.LENGTH_LONG).show();
                 })
@@ -119,18 +151,18 @@ public class NewLockFragment extends Fragment implements View.OnClickListener {
                 .show();
     }
 
-     private class DeploySC extends AsyncTask<Pair<Credentials, String>, String, Pair<Locker_sol_Locker, String>> {
+     private class DeploySC extends AsyncTask<Pair<Credentials, String[]>, String, Pair<Locker_sol_Locker, String>> {
         @Override
-        protected Pair<Locker_sol_Locker, String> doInBackground(Pair<Credentials, String>... params) {
-            Pair<Credentials, String> pair = params[0];
+        protected Pair<Locker_sol_Locker, String> doInBackground(Pair<Credentials, String[]>... params) {
+            Pair<Credentials, String[]> pair = params[0];
             Credentials credentials = pair.first;
             Pair<Locker_sol_Locker, String> result = null;
             try {
                 HttpService httpService =  new HttpService(Web3jUtil.INFURA_URL);
                 Web3j web3 = Web3j.build(httpService);
                 Locker_sol_Locker contract = Locker_sol_Locker.deploy(web3, credentials, new DefaultGasProvider(),
-                        "pubKey", "lyh").send();
-                result = new Pair<>(contract, pair.second);
+                        pair.second[2], pair.second[1]).send();
+                result = new Pair<>(contract, pair.second[0]);
                 web3.shutdown();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -159,14 +191,10 @@ public class NewLockFragment extends Fragment implements View.OnClickListener {
                 lockInfo.setContractAddr(result.first.getContractAddress());
                 lockInfo.setImport(false);
 
-
-
                 DaoSession daoSession =  GreenDaoManager.getInstance().getDaoSession();
                 LockInfoDao lockInfoDao = daoSession.getLockInfoDao();
                 lockInfoDao.insert(lockInfo);
 
-
-                TextView tv = new TextView(getContext());
                 new AlertDialog.Builder(getContext())
                         .setTitle("合约部署结果")
                         .setMessage("部署成功！地址：" + result.first.getContractAddress())

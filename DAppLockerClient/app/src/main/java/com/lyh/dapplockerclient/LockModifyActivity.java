@@ -3,8 +3,11 @@ package com.lyh.dapplockerclient;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -17,11 +20,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.lyh.lockersc.Locker_sol_Locker;
 import com.lyh.lockersc.Web3jUtil;
@@ -33,12 +38,18 @@ import org.web3j.crypto.Credentials;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.tuples.generated.Tuple3;
 import org.web3j.tuples.generated.Tuple6;
 import org.web3j.tx.gas.DefaultGasProvider;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 public class LockModifyActivity extends AppCompatActivity {
@@ -123,17 +134,59 @@ public class LockModifyActivity extends AppCompatActivity {
         name = findViewById(R.id.lock_name);
         btnDelLock = findViewById(R.id.btn_delete_lock);
         btnDelLock.setOnClickListener(v -> {
-            LockInfoDao dao = GreenDaoManager.getInstance().getDaoSession().getLockInfoDao();
-            dao.deleteByKey(info.getId());
-            finish();
+            new AlertDialog.Builder(LockModifyActivity.this)
+                    .setTitle("警告")
+                    .setMessage("是否确认删除？")
+                    .setPositiveButton("是", (dialog, which) -> {
+                        LockInfoDao dao = GreenDaoManager.getInstance().getDaoSession().getLockInfoDao();
+                        dao.deleteByKey(info.getId());
+                        finish();
+                    })
+                    .setNegativeButton("否", null).show();
         });
+
         btnBindLock = findViewById(R.id.btn_bind_lock);
+        if (info.isImport()) {
+            btnBindLock.setVisibility(View.INVISIBLE);
+        }
         btnBindLock.setOnClickListener((v) -> {
-            //TODO
+            LockService service = RetrofitMgr.getInstance().createService(LockService.class);
+            LockReq req = new LockReq();
+            req.contractAddr = info.getContractAddr();
+            service.addLock(req).enqueue(new Callback<LockResp>() {
+                @Override
+                public void onResponse(Call<LockResp> call, Response<LockResp> response) {
+                    LockResp resp = response.body();
+                    if (resp == null || resp.code != 0) {
+                        Toast.makeText(LockModifyActivity.this, "服务异常", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    JSONObject object = new JSONObject();
+                    object.put("salt", resp.salt);
+                    object.put("addr", info.getContractAddr());
+                    Bitmap bm = Util.createQRCodeBitmap(object.toJSONString(), 1000, 1000,
+                            "utf-8", "H", "1",
+                            Color.BLACK, Color.WHITE);
+                    ImageView iv = new ImageView(LockModifyActivity.this);
+                    iv.setImageBitmap(bm);
+                    new AlertDialog.Builder(LockModifyActivity.this)
+                            .setTitle("绑定设备")
+                            .setView(iv)
+                            .setPositiveButton("确定", null).show();
+
+                }
+
+                @Override
+                public void onFailure(Call<LockResp> call, Throwable t) {
+
+                }
+            });
         });
         btnAddUser = findViewById(R.id.btn_add_user);
         if (!info.isImport()) {
             btnAddUser.setVisibility(View.VISIBLE);
+        } else {
+            btnAddUser.setVisibility(View.INVISIBLE);
         }
         btnAddUser.setOnClickListener(v -> {
             LayoutInflater layoutInflater = LayoutInflater.from(LockModifyActivity.this);
@@ -247,15 +300,15 @@ public class LockModifyActivity extends AppCompatActivity {
 
         }
     }
-    class GetUserListTask extends AsyncTask<String, String, Tuple6<String, String, String, List<String>, String, String>> {
+    class GetUserListTask extends AsyncTask<String, String, Tuple3<List<String>, String, String>> {
 
         @Override
-        protected Tuple6<String, String, String, List<String>, String, String> doInBackground(String... pairs) {
+        protected Tuple3<List<String>, String, String> doInBackground(String... pairs) {
             String contractAddr = info.getContractAddr();
             HttpService httpService =  new HttpService(Web3jUtil.INFURA_URL);
             Web3j web3 = Web3j.build(httpService);
             Locker_sol_Locker contract = Locker_sol_Locker.load(contractAddr, web3, credentials, new DefaultGasProvider());
-            Tuple6<String, String, String, List<String>, String, String> res = null;
+            Tuple3<List<String>, String, String> res = null;
             try {
                 res = contract.getUserInfo().send();
             } catch (Exception e) {
@@ -267,27 +320,23 @@ public class LockModifyActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(Tuple6<String, String, String, List<String>, String, String> res) {
+        protected void onPostExecute(Tuple3<List<String>, String, String> res) {
             super.onPostExecute(res);
-            List<String> addrs = res.getValue4();
-            String names = res.getValue5();
-            String pubKeys = res.getValue6();
+            List<String> addrs = res.getValue1();
+            String names = res.getValue2();
+            String pubKeys = res.getValue3();
             String[] nameArr = names.split("\n");
             String[] pubKeyArr = pubKeys.split("\n");
-            for (int i = 0; i < nameArr.length; i++) {
-                if (nameArr[i].equals("")) continue;
-
+            for (int i = 1; i < nameArr.length; i++) {
                 TreeNode node = new TreeNode(new UserItem(nameArr[i], pubKeyArr[i], addrs.get(i - 1)))
                         .setViewHolder(LockModifyActivity.this.new UserHolder(LockModifyActivity.this));
                 userList.addChild(node);
             }
 
-            Log.d("res", res.getValue1());
-            Log.d("res", res.getValue2());
-            Log.d("res", res.getValue3());
-            Log.d("res", res.getValue4().toString());
-            Log.d("res", res.getValue5());
-            Log.d("res", res.getValue6());
+            Log.d("res1", res.getValue1().toString());
+            Log.d("res2", res.getValue2());
+            Log.d("res3", res.getValue3());
+            Log.d("res4", "res4");
             userList.getViewHolder().toggle(false);
             userList.getViewHolder().toggle(true);
             isRunning = false;

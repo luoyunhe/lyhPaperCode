@@ -3,13 +3,16 @@ package com.lyh.dapplockerclient;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends Activity implements View.OnClickListener {
 
@@ -27,19 +30,42 @@ public class LoginActivity extends Activity implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
+        v.setClickable(false);
         String userName = etUserName.getText().toString();
         String password = etPassword.getText().toString();
         if (userName.equals("") || password.equals("")) {
             Toast.makeText(this, "账号、密码不能为空！", Toast.LENGTH_LONG).show();
             return;
         }
-        SharedPreferences sp = getSharedPreferences("setting", 0);
-        UserInfo userInfo = new UserInfo();
-        userInfo.setName(etUserName.getText().toString());
-        sp.edit().putString(Util.USER_INFO_KEY, JSON.toJSONString(userInfo)).commit();
+        LockService service = RetrofitMgr.getInstance().createService(LockService.class);
+        LoginReq req = new LoginReq(userName, password);
+        service.login(req).enqueue(new Callback<LoginResp>() {
+            @Override
+            public void onResponse(Call<LoginResp> call, Response<LoginResp> response) {
+                LoginResp resp = response.body();
+                if (resp == null || resp.code != 0) {
+                    Toast.makeText(LoginActivity.this, "登录异常！", Toast.LENGTH_LONG).show();
+                    v.setClickable(true);
+                    return;
+                }
+                SharedPreferences sp = getSharedPreferences("setting", 0);
+                UserInfo userInfo = new UserInfo();
+                userInfo.setName(userName);
+                sp.edit().putString(Util.USER_INFO_KEY, JSON.toJSONString(userInfo))
+                        .putString(Util.USER_TOKEN_KEY, resp.token).commit();
 
+                v.setClickable(true);
+                finish();
+            }
 
-        finish();
+            @Override
+            public void onFailure(Call<LoginResp> call, Throwable t) {
+                Toast.makeText(LoginActivity.this, "登录异常！", Toast.LENGTH_LONG).show();
+                v.setClickable(true);
+                t.printStackTrace();
+            }
+        });
+
     }
 
 }

@@ -35,6 +35,10 @@ dependencies {
     implementation 'com.alibaba:fastjson:1.1.70.android'
     implementation 'com.github.bmelnychuk:atv:1.2.+'
     implementation 'org.greenrobot:greendao:3.2.2'
+    implementation 'com.squareup.okhttp3:okhttp:3.13.1'
+    implementation 'com.squareup.retrofit2:retrofit:2.5.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.5.0'
+    implementation 'com.google.zxing:core:3.3.0'
 //    implementation project(':library')
     implementation 'com.github.johnkil.print:print:1.2.2'
     testImplementation 'junit:junit:4.12'
