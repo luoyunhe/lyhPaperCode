@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option objc_class_prefix = "HLW";
+
+package lock;
+
+service Lock {
+  rpc decrypt (Request) returns (Response) {}
+}
+
+message Request {
+  string pubKey = 1;
+  string sign = 2;
+}
+
+message Response {
+  string ranStr = 1;
+}
+

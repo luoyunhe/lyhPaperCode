@@ -1,4 +1,5 @@
-package main
+package com.company;
+
 import javax.crypto.Cipher;
 import java.security.*;
 import java.security.interfaces.RSAPrivateKey;
@@ -16,15 +17,26 @@ public class TestRSA {
         KeyPair keyPair= keyPairGenerator.generateKeyPair();
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
         RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+        String pubKey = Base64.getEncoder().encodeToString(publicKey.getEncoded());
+        System.out.println(publicKey.getFormat());
+        String priKey = Base64.getEncoder().encodeToString(privateKey.getEncoded());
         System.out.println("Pub key: " + Base64.getEncoder().encodeToString(publicKey.getEncoded()));
         System.out.println("Pri key: " + Base64.getEncoder().encodeToString(privateKey.getEncoded()));
-
+//
         String text = "1551014935:WZDcSy8o";
         byte[] buf = text.getBytes();
 
-        byte[] encryptBuf = encryptByPrivateKey(buf, privateKey.getEncoded());
 
-        byte[] dencryptBuf = decryptByPublicKey(encryptBuf, publicKey.getEncoded());
+//        String priKey = "MIIBVQIBADANBgkqhkiG9w0BAQEFAASCAT8wggE7AgEAAkEAuzgs2llPiMFU8eb2YJNkC1nbQmaWLwOgOAgVKmgOlrWm3JH0UT0g76txnMEdfER7ahAiS2PmUK3ukQg7T8NniQIDAQABAkAC6JHg0AGhbiB11BjYgf2sQ/h5KPsVDqU87Zo3kw+D9ZZo3wjaGXpUPe+wRc8EfTpsuw8sR/GRxuBrNRuzNd0hAiEA6xw6rE67jGDJMAd2qI0BMkYr2U6VpRQiRTgZl7TvtaECIQDL2qF2rnkMmSBRLtQkljC7Zlbnf9dABKUCDdaePpAY6QIhAOce/Aqw5yuLZZuCasIswxVR5/8agn8iOMJE8NuyscahAiEAn3hUv0cVoulXAqsjgcuMK82PRmIXvRjlDIpOzlQa3aECIDaaWxnhl1v63gsV3e+Cs1afG56BTQAO5ELtCHhDaxYp";
+//        String pubKey = "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALs4LNpZT4jBVPHm9mCTZAtZ20Jmli8DoDgIFSpoDpa1ptyR9FE9IO+rcZzBHXxEe2oQIktj5lCt7pEIO0/DZ4kCAwEAAQ==";
+
+        byte[] encryptBuf = encryptByPrivateKey(buf, Base64.getDecoder().decode(priKey));
+
+        String encryptStr = Base64.getEncoder().encodeToString(encryptBuf);
+
+        System.out.println(encryptStr);
+
+        byte[] dencryptBuf = decryptByPublicKey(encryptBuf, Base64.getDecoder().decode(pubKey));
 
 
 

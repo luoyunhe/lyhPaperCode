@@ -1,6 +1,10 @@
 package com.lyh.dapplockerclient;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -9,6 +13,15 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.alibaba.fastjson.JSONObject;
 
 import org.web3j.crypto.Bip39Wallet;
 import org.web3j.crypto.CipherException;
@@ -19,6 +32,15 @@ import org.web3j.crypto.WalletUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import static org.web3j.crypto.Hash.sha256;
 import static org.web3j.crypto.WalletUtils.generateWalletFile;
@@ -27,23 +49,17 @@ import static org.web3j.crypto.WalletUtils.generateWalletFile;
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link HomeFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link HomeFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements AdapterView.OnItemClickListener {
 
     final private String ClASSNAME = this.getClass().getSimpleName();
 
-
-    private static final String ARG_PARAM1 = "param1";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
+    private ListView lvLock;
 
 
-    private OnFragmentInteractionListener mListener;
+
+
 
     public HomeFragment() {
         // Required empty public constructor
@@ -56,11 +72,9 @@ public class HomeFragment extends Fragment {
      * @param param1 Parameter 1.
      * @return A new instance of fragment HomeFragment.
      */
-    // TODO: Rename and change types and number of parameters
     public static HomeFragment newInstance(String param1) {
         HomeFragment fragment = new HomeFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
 
         fragment.setArguments(args);
         return fragment;
@@ -69,67 +83,102 @@ public class HomeFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-//        File fileDir = new File(getContext().getFilesDir().getAbsoluteFile()
-//                .getPath() + "/MyWallet/");
-        File fileDir = new File(getContext().getFilesDir().getAbsoluteFile().getPath());
-        if (!fileDir.exists()) {
-            fileDir.mkdirs();
-            Log.d(ClASSNAME, fileDir.getAbsolutePath());
-            if (!fileDir.exists()) {
-                Log.d(ClASSNAME, "noexist");
+        View view = inflater.inflate(R.layout.fragment_home, container, false);
+        lvLock = view.findViewById(R.id.lv_lock);
+//        TextView tvHeader = new TextView(getContext());
+//        tvHeader.setText("点击获取开锁二维码");
+//        lvLock.addHeaderView(tvHeader);
+
+        List<Map<String, String>> listMaps= new ArrayList<>();
+        Map<String, String> map=new HashMap<String, String>();
+        map.put("first", "第一句");
+        map.put("second", "第二句");
+        listMaps.add(map);
+        SimpleAdapter simpleAdapter = new SimpleAdapter(getContext(), listMaps,
+                android.R.layout.simple_expandable_list_item_2, new String[]{"first", "second"},
+                new int[]{android.R.id.text1, android.R.id.text2});
+        lvLock.setAdapter(simpleAdapter);
+
+        return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        LockInfoDao dao = GreenDaoManager.getInstance().getDaoSession().getLockInfoDao();
+        List<LockInfo> lockInfoList = dao.queryBuilder().build().list();
+        List<Map<String, String>> listMaps= new ArrayList<>();
+        for (LockInfo info : lockInfoList) {
+            if (info.isImport() && !info.getContractAddr().equals("") || !info.isImport()) {
+                Map<String, String> map = new HashMap<>();
+                map.put("first", info.getName());
+                map.put("second", info.getContractAddr());
+                listMaps.add(map);
             }
         }
-        String privateKey = "2903BB92A51AAFEAE5B936AEC758257F04D8432AFBB4C2F1609B10C1B86C847E";
-        String password = "jnu";
-        Credentials credentials = Credentials.create(privateKey);
-        Log.d(ClASSNAME, "导入的钱包地址:" + credentials.getAddress());
-        return inflater.inflate(R.layout.fragment_home, container, false);
+        SimpleAdapter adapter = new SimpleAdapter(getContext(), listMaps,
+                android.R.layout.simple_expandable_list_item_2, new String[]{"first", "second"},
+                new int[]{android.R.id.text1, android.R.id.text2});
+        lvLock.setAdapter(adapter);
+        lvLock.setOnItemClickListener(this);
+
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        TextView tv = view.findViewById(android.R.id.text2);
+        String address = tv.getText().toString();
+        SharedPreferences sp = getContext().getSharedPreferences("setting", 0);
+        String priKey = sp.getString(Util.USER_PRI_KEY_KEY, "");
+        String pubKey = sp.getString(Util.USER_PUB_KEY_KEY, "");
+        String userAddr = sp.getString(Util.USER_ETH_ADDR_KEY, "");
 
-//    @Override
-//    public void onAttach(Context context) {
-//        super.onAttach(context);
-//        if (context instanceof OnFragmentInteractionListener) {
-//            mListener = (OnFragmentInteractionListener) context;
-//        } else {
-//            throw new RuntimeException(context.toString()
-//                    + " must implement OnFragmentInteractionListener");
-//        }
-//    }
+        LockService service = RetrofitMgr.getInstance().createService(LockService.class);
+        service.getRandomStr(address).enqueue(new Callback<RanStrResp>() {
+            @Override
+            public void onResponse(Call<RanStrResp> call, Response<RanStrResp> response) {
+                RanStrResp resp = response.body();
+                if (resp == null || resp.code != 0) {
+                    Toast.makeText(getContext(), "服务异常", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                String randomStr = resp.ranStr;
+                byte[] key = Base64.getDecoder().decode(priKey);
+                Log.d("RSA pri:", priKey);
+                String sign = "";
+                try {
+                    byte[] signByte = Util.encryptByPrivateKey(randomStr.getBytes("utf-8"), key);
+                    sign = Base64.getEncoder().encodeToString(signByte);
+                    Log.d("RSA sign", sign);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                JSONObject object = new JSONObject();
+                object.put("sign", sign);
+                object.put("addr", userAddr);
+                String jsonStr = object.toJSONString();
+                Bitmap bm = Util.createQRCodeBitmap(jsonStr, 1000, 1000,
+                        "utf-8", "H", "1",
+                        Color.BLACK, Color.WHITE);
+                ImageView iv = new ImageView(getContext());
+                iv.setImageBitmap(bm);
+                new AlertDialog.Builder(getContext())
+                        .setTitle("扫码开锁")
+                        .setView(iv)
+                        .setPositiveButton("确定", null).show();
+            }
 
-//    @Override
-//    public void onDetach() {
-//        super.onDetach();
-//        mListener = null;
-//    }
+            @Override
+            public void onFailure(Call<RanStrResp> call, Throwable t) {
+                t.printStackTrace();
+                Toast.makeText(getContext(), "服务异常", Toast.LENGTH_LONG).show();
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+            }
+        });
     }
 }

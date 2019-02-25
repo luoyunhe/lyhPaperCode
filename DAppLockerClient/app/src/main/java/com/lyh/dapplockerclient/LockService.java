@@ -2,7 +2,9 @@ package com.lyh.dapplockerclient;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.Query;
 
 public interface LockService {
     @POST("/api/login")
@@ -11,6 +13,13 @@ public interface LockService {
 
     @POST("/api/lock")
     Call<LockResp> addLock(@Body LockReq req);
+
+    @GET("/api/lock/randomstr")
+    Call<RanStrResp> getRandomStr(@Query("address") String address);
+}
+class RanStrResp {
+    public int code;
+    public String ranStr;
 }
 
 class LoginReq {

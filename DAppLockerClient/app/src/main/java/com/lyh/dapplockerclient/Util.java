@@ -10,7 +10,14 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
 import java.io.File;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Hashtable;
+
+import javax.crypto.Cipher;
 
 public class Util {
     public static final String USER_TOKEN_KEY = "user_token";
@@ -26,7 +33,39 @@ public class Util {
 
     public static final String KEY_ALGORITHM = "RSA";
     static public File walletDir = null;
+    public static byte[] encryptByPrivateKey(byte[] data, byte[] key) throws Exception {
 
+        //取得私钥
+        PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(key);
+        KeyFactory keyFactory = KeyFactory.getInstance(KEY_ALGORITHM);
+        //生成私钥
+        PrivateKey privateKey = keyFactory.generatePrivate(pkcs8KeySpec);
+        //数据加密
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, privateKey);
+        return cipher.doFinal(data);
+    }
+    /**
+     * 公钥解密
+     *
+     * @param data 待解密数据
+     * @param key  密钥
+     * @return byte[] 解密数据
+     */
+    public static byte[] decryptByPublicKey(byte[] data, byte[] key) throws Exception {
+
+        //实例化密钥工厂
+        KeyFactory keyFactory = KeyFactory.getInstance(KEY_ALGORITHM);
+        //初始化公钥
+        //密钥材料转换
+        X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(key);
+        //产生公钥
+        PublicKey pubKey = keyFactory.generatePublic(x509KeySpec);
+        //数据解密
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.DECRYPT_MODE, pubKey);
+        return cipher.doFinal(data);
+    }
     static public String getWalletDirString() {
         return walletDir.getAbsolutePath();
     }
