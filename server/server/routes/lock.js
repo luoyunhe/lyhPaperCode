@@ -12,12 +12,17 @@ const router = new Router();
 router.prefix(`/${baseApi}/${api}`)
 
 
-router.post('/', LockControllers.bindLock)
+router.post('/salt', jwt, LockControllers.getSalt);
 
-router.post('/randomstr', LockControllers.setRandomStr)
+router.post('/randomstr', LockControllers.setRandomStr);
 
-router.get('/randomstr', LockControllers.getRandomStr)
+router.get('/randomstr', LockControllers.getRandomStr);
 
-router.post('/record', LockControllers.addRecord)
+router.post('/record', LockControllers.addRecord);
 
+router.post('/import', LockControllers.genImportLock);
+
+router.put('/import', LockControllers.setImportLock);
+
+router.get('/import', LockControllers.getImportLock);
 export default router;

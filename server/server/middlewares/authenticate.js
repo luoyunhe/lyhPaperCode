@@ -5,6 +5,15 @@ import { jwtSecret } from '../config'
 
 export default async ctx => {
   const { userName, password } = ctx.request.body;
+  if (!userName || !password) {
+    ctx.status = 200;
+    ctx.body = {
+      code: -1,
+      msg: 'error'
+    }
+    return;
+  }
+  
   const userFound = await UserModel.find({ name: userName });
 
   if (userFound.length != 0 && userFound[0].password != password) {
@@ -23,7 +32,7 @@ export default async ctx => {
   }
   ctx.status = 200;
   ctx.body = {
-    token: jwt.sign({ userName }, jwtSecret),
+    token: jwt.sign({ userName }, jwtSecret, { expiresIn: 60 * 60 * 24 * 7}),
     code: 0,
     message: 'Successful Authentication'
   };

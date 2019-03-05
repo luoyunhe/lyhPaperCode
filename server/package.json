@@ -34,6 +34,8 @@
   "dependencies": {
     "babel-polyfill": "^6.5.0",
     "bcrypt": "^3.0.4",
+    "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-plugin-react": "^7.12.4",
     "glob": "^7.1.2",
     "https": "^1.0.0",
     "jsonwebtoken": "^8.1.1",
