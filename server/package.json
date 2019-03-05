@@ -45,7 +45,8 @@
     "koa-router": "^7.3.0",
     "koa-sslify": "^4.0.3",
     "memory-cache": "^0.2.0",
-    "mongoose": "^5.0.1"
+    "mongoose": "^5.0.1",
+    "web3": "^1.0.0-beta.47"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

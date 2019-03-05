@@ -1,7 +1,4 @@
 pragma solidity >=0.4.22 <0.6.0;
-// pragma experimental ABIEncoderV2;
-
-// import "strings.sol";
 
 contract Locker {
     //合约主人，即锁的拥有者
