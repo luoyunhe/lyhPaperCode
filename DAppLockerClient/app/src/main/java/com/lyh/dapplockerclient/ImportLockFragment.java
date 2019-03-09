@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 
@@ -24,6 +25,11 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
 import java.util.List;
+
+import javax.security.auth.callback.Callback;
+
+import retrofit2.Call;
+import retrofit2.Response;
 
 
 /**
@@ -80,8 +86,25 @@ public class ImportLockFragment extends Fragment implements View.OnClickListener
         importInfo.setUserName(userInfo.getName());
         importInfo.setUserPubKey(pubKey);
         importInfo.setUserAddr(ethAddr);
-        String importInfoJson = JSON.toJSONString(importInfo);
-        etImportInfo.setText(importInfoJson);
+        LockService service = RetrofitMgr.getInstance().createService(LockService.class);
+        service.genImport().enqueue(new retrofit2.Callback<ImportResp>() {
+            @Override
+            public void onResponse(Call<ImportResp> call, Response<ImportResp> response) {
+                if (response.body() == null || response.body().code != 0) {
+                    Toast.makeText(getContext(), "服务异常", Toast.LENGTH_LONG).show();
+                } else {
+                    importInfo.setKey(response.body().key);
+                    importInfo.setPasswd(response.body().passwd);
+                    String importInfoJson = JSON.toJSONString(importInfo);
+                    etImportInfo.setText(importInfoJson);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ImportResp> call, Throwable t) {
+                t.printStackTrace();
+            }
+        });
 
 
         return v;

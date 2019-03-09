@@ -3,20 +3,43 @@ package com.lyh.dapplockerclient;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Query;
 
 public interface LockService {
     @POST("/api/login")
     Call<LoginResp> login(@Body LoginReq req);
 
+//    @Headers("Authorization: Authorization")
+    @POST("/api/lock/salt")
+    Call<SaltResp> getSalt(@Header("Authorization") String auth, @Body SaltReq req);
 
-    @POST("/api/lock")
-    Call<LockResp> addLock(@Body LockReq req);
-
+//    @Headers("Authorization: Authorization")
     @GET("/api/lock/randomstr")
-    Call<RanStrResp> getRandomStr(@Query("address") String address);
+    Call<RanStrResp> getRandomStr(@Header("Authorization") String auth, @Query("address") String address);
+
+    @POST("/api/lock/import")
+    Call<ImportResp> genImport();
+
+    @PUT("/api/lock/import")
+    Call<SetImportResp> setImport(@Body SetImportReq req);
 }
+class SetImportResp {
+    public int code;
+}
+class SetImportReq {
+    public String key;
+    public String passwd;
+    public String activateStr;
+}
+class ImportResp {
+    public int code;
+    public String key;
+    public String passwd;
+}
+
 class RanStrResp {
     public int code;
     public String ranStr;
@@ -37,11 +60,11 @@ class LoginResp {
     public String msg;
 }
 
-class LockReq {
+class SaltReq {
     public String contractAddr;
 }
 
-class LockResp {
+class SaltResp {
     public String salt;
     public int code;
 }

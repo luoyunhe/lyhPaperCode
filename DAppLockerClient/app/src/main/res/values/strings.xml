@@ -5,7 +5,7 @@
     <string name="launch_title">DApp locker client</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_home">主页</string>
-    <string name="title_additional_fun">辅助功能</string>
+    <string name="title_additional_fun">门锁日志</string>
     <string name="title_setting">设置</string>
 
     <!-- TODO: Remove or change this placeholder text -->

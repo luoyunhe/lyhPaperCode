@@ -137,9 +137,10 @@ public class HomeFragment extends Fragment implements AdapterView.OnItemClickLis
         String priKey = sp.getString(Util.USER_PRI_KEY_KEY, "");
         String pubKey = sp.getString(Util.USER_PUB_KEY_KEY, "");
         String userAddr = sp.getString(Util.USER_ETH_ADDR_KEY, "");
+        String token = "Bearer " + sp.getString(Util.USER_TOKEN_KEY, "");
 
         LockService service = RetrofitMgr.getInstance().createService(LockService.class);
-        service.getRandomStr(address).enqueue(new Callback<RanStrResp>() {
+        service.getRandomStr(token, address).enqueue(new Callback<RanStrResp>() {
             @Override
             public void onResponse(Call<RanStrResp> call, Response<RanStrResp> response) {
                 RanStrResp resp = response.body();

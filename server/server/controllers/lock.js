@@ -5,6 +5,7 @@ import LockModel from '../models/lcoks'
 import getContractOwnerName from '../sc/lock';
 
 function getRandomSalt() {
+    return bcrypt.genSaltSync(10);
 }
 function getRanStr() {
     return bcrypt.genSaltSync(10);
@@ -16,6 +17,7 @@ const importLockCache = new cache.Cache();
 
 class LockControllers {
     async getSalt(ctx) {
+        // console.log(ctx.header);
         const contractAddr = ctx.request.body.contractAddr || '';
         if (contractAddr === '') {
             ctx.status = 200;
@@ -25,8 +27,8 @@ class LockControllers {
             }
             return;
         }
-        let userName = ctx.state.user.userName;
-        let contractOwnerName = await getContractOwnerName(contractAddr);
+        const { userName } = ctx.state.user;
+        const contractOwnerName = await getContractOwnerName(contractAddr);
         if (userName !== contractOwnerName) {
             ctx.status = 200;
             ctx.body = {
@@ -34,7 +36,7 @@ class LockControllers {
                 msg: "Authentication Error"
             }
         }
-        
+
         console.log(userName);
 
         const lockFound = await LockModel.find({ addr: contractAddr });
@@ -129,8 +131,8 @@ class LockControllers {
 
     async genImportLock(ctx) {
         ctx.status = 200;
-        let key = Data.now().toString() + getRanStr();
-        let value = {
+        const key = Date.now().toString() + getRanStr();
+        const value = {
             activateStr: "",
             passwd: getRanStr()
         };
@@ -141,14 +143,15 @@ class LockControllers {
             passwd: value.passwd
         }
     }
+
     async setImportLock(ctx) {
         ctx.status = 200;
-        let key = ctx.request.body.key;
-        let passwd = ctx.request.body.passwd;
-        let activateStr = ctx.request.body.key;
-        let valueStr = importLockCache.get(key)
+        const { key } = ctx.request.body;
+        const { passwd } = ctx.request.body;
+        const {activateStr} = ctx.request.body;
+        const valueStr = importLockCache.get(key)
         if (valueStr) {
-            let value = JSON.parse(valueStr);
+            const value = JSON.parse(valueStr);
             if (value.passwd !== passwd) {
                 ctx.body = {
                     code: -1,
@@ -169,12 +172,13 @@ class LockControllers {
         }
 
     }
+
     async getImportLock(ctx) {
         ctx.status = 200;
-        let key = ctx.request.body.key;
-        let valueStr = importLockCache.get(key);
+        const { key } = ctx.request.body;
+        const valueStr = importLockCache.get(key);
         if (valueStr) {
-            let value = JSON.parse(valueStr);
+            const value = JSON.parse(valueStr);
             if (value.activateStr !== '') {
                 ctx.body = {
                     code: 0,

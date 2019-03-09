@@ -3,7 +3,6 @@ package com.lyh.dapplockerclient;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -27,7 +26,6 @@ import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.lyh.lockersc.Locker_sol_Locker;
 import com.lyh.lockersc.Web3jUtil;
 import com.unnamed.b.atv.model.TreeNode;
@@ -39,13 +37,11 @@ import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tuples.generated.Tuple3;
-import org.web3j.tuples.generated.Tuple6;
 import org.web3j.tx.gas.DefaultGasProvider;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -150,13 +146,15 @@ public class LockModifyActivity extends AppCompatActivity {
             btnBindLock.setVisibility(View.INVISIBLE);
         }
         btnBindLock.setOnClickListener((v) -> {
+            SharedPreferences sp = getSharedPreferences("setting", 0);
+            String token = "Bearer " + sp.getString(Util.USER_TOKEN_KEY, "");
             LockService service = RetrofitMgr.getInstance().createService(LockService.class);
-            LockReq req = new LockReq();
+            SaltReq req = new SaltReq();
             req.contractAddr = info.getContractAddr();
-            service.addLock(req).enqueue(new Callback<LockResp>() {
+            service.getSalt(token, req).enqueue(new Callback<SaltResp>() {
                 @Override
-                public void onResponse(Call<LockResp> call, Response<LockResp> response) {
-                    LockResp resp = response.body();
+                public void onResponse(Call<SaltResp> call, Response<SaltResp> response) {
+                    SaltResp resp = response.body();
                     if (resp == null || resp.code != 0) {
                         Toast.makeText(LockModifyActivity.this, "服务异常", Toast.LENGTH_LONG).show();
                         return;
@@ -177,7 +175,7 @@ public class LockModifyActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onFailure(Call<LockResp> call, Throwable t) {
+                public void onFailure(Call<SaltResp> call, Throwable t) {
 
                 }
             });
@@ -275,6 +273,25 @@ public class LockModifyActivity extends AppCompatActivity {
             Locker_sol_Locker contract = Locker_sol_Locker.load(contractAddr, web3, credentials, new DefaultGasProvider());
             try {
                 contract.addUser(info.getUserAddr(), info.getUserName(), info.getUserPubKey()).send();
+                String key = info.getKey();
+                String passwd = info.getPasswd();
+                LockService service = RetrofitMgr.getInstance().createService(LockService.class);
+                SetImportReq req = new SetImportReq();
+                req.activateStr = contractAddr;
+                req.key = info.getKey();
+                req.passwd = info.getPasswd();
+                service.setImport(req).enqueue(new Callback<SetImportResp>() {
+                    @Override
+                    public void onResponse(Call<SetImportResp> call, Response<SetImportResp> response) {
+                       Log.d("set import", JSON.toJSONString(response.body()));
+                    }
+
+                    @Override
+                    public void onFailure(Call<SetImportResp> call, Throwable t) {
+                        t.printStackTrace();
+                    }
+                });
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
