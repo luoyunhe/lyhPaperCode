@@ -162,6 +162,7 @@ public class HomeFragment extends Fragment implements AdapterView.OnItemClickLis
                 JSONObject object = new JSONObject();
                 object.put("sign", sign);
                 object.put("addr", userAddr);
+                object.put("cmd", "open");
                 String jsonStr = object.toJSONString();
                 Bitmap bm = Util.createQRCodeBitmap(jsonStr, 1000, 1000,
                         "utf-8", "H", "1",
