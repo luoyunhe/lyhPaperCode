@@ -13,7 +13,7 @@ export default async ctx => {
     }
     return;
   }
-  
+
   const userFound = await UserModel.find({ name: userName });
 
   if (userFound.length != 0 && userFound[0].password != password) {
@@ -32,8 +32,14 @@ export default async ctx => {
   }
   ctx.status = 200;
   ctx.body = {
-    token: jwt.sign({ userName }, jwtSecret, { expiresIn: 60 * 60 * 24 * 7}),
+    token: jwt.sign({ userName }, jwtSecret, { expiresIn: 60 * 60 * 24 * 7 }),
     code: 0,
     message: 'Successful Authentication'
   };
 };
+
+
+
+
+
+

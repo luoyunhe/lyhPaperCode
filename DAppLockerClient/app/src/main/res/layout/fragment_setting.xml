@@ -33,7 +33,7 @@
         <LinearLayout style="@style/top_layout"
             android:id="@+id/private_key_setting">
 
-            <TextView style="@style/usertext" android:text="私钥设置" />
+            <TextView style="@style/usertext" android:text="以太坊账户设置" />
             <ImageView style="@style/img_arrow"/>
         </LinearLayout>
         <View style="@style/bg_line"/>

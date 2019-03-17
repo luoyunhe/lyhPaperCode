@@ -114,6 +114,27 @@ public class HomeFragment extends Fragment implements AdapterView.OnItemClickLis
         List<LockInfo> lockInfoList = dao.queryBuilder().build().list();
         List<Map<String, String>> listMaps= new ArrayList<>();
         for (LockInfo info : lockInfoList) {
+            if (info.isImport() && info.getContractAddr().equals("")) {
+                String key = info.getImportTaskId();
+                LockService service = RetrofitMgr.getInstance().createService(LockService.class);
+                service.getImport(key).enqueue(new Callback<GetImportResp>() {
+                    @Override
+                    public void onResponse(Call<GetImportResp> call, Response<GetImportResp> response) {
+                        GetImportResp resp = response.body();
+                        if (resp == null || resp.code != 0) {
+                            Toast.makeText(getContext(), "get result error", Toast.LENGTH_LONG);
+                            return;
+                        }
+                        info.setContractAddr(resp.activateStr);
+                        dao.update(info);
+                    }
+
+                    @Override
+                    public void onFailure(Call<GetImportResp> call, Throwable t) {
+                        t.printStackTrace();
+                    }
+                });
+            }
             if (info.isImport() && !info.getContractAddr().equals("") || !info.isImport()) {
                 Map<String, String> map = new HashMap<>();
                 map.put("first", info.getName());
@@ -164,7 +185,7 @@ public class HomeFragment extends Fragment implements AdapterView.OnItemClickLis
                 object.put("addr", userAddr);
                 object.put("cmd", "open");
                 String jsonStr = object.toJSONString();
-                Bitmap bm = Util.createQRCodeBitmap(jsonStr, 1000, 1000,
+                Bitmap bm = Util.createQRCodeBitmap(jsonStr, 600, 600,
                         "utf-8", "H", "1",
                         Color.BLACK, Color.WHITE);
                 ImageView iv = new ImageView(getContext());

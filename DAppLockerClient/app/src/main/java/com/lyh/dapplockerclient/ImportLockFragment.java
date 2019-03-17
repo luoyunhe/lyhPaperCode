@@ -119,6 +119,7 @@ public class ImportLockFragment extends Fragment implements View.OnClickListener
             case R.id.btn_new:
                 String lockName = etNewLock.getText().toString();
                 String info = etImportInfo.getText().toString();
+                ImportInfo importInfo = JSON.parseObject(info, ImportInfo.class);
                 ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData clipData = ClipData.newPlainText(null, info);
                 clipboard.setPrimaryClip(clipData);
@@ -127,6 +128,7 @@ public class ImportLockFragment extends Fragment implements View.OnClickListener
                 lockInfo.setName(lockName);
                 lockInfo.setImport(true);
                 lockInfo.setContractAddr("");
+                lockInfo.setImportTaskId(importInfo.getKey());
 
                 GreenDaoManager.getInstance().getDaoSession().getLockInfoDao().insert(lockInfo);
 

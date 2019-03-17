@@ -162,7 +162,7 @@ public class LockModifyActivity extends AppCompatActivity {
                     JSONObject object = new JSONObject();
                     object.put("salt", resp.salt);
                     object.put("addr", info.getContractAddr());
-                    Bitmap bm = Util.createQRCodeBitmap(object.toJSONString(), 1000, 1000,
+                    Bitmap bm = Util.createQRCodeBitmap(object.toJSONString(), 600, 600,
                             "utf-8", "H", "1",
                             Color.BLACK, Color.WHITE);
                     ImageView iv = new ImageView(LockModifyActivity.this);
@@ -236,22 +236,22 @@ public class LockModifyActivity extends AppCompatActivity {
         contractAddr = findViewById(R.id.lock_contract_addr  );
         name.setText(info.getName());
         if (info.getContractAddr().equals("")) {
-            contractAddr.setText("未激活，点击我激活！");
-            contractAddr.setOnClickListener(v -> {
-                EditText input = new EditText(LockModifyActivity.this);
-                 new AlertDialog.Builder(LockModifyActivity.this)
-                         .setTitle("请输入激活序列！")
-                         .setView(input)
-                         .setPositiveButton("激活", (dialog, which) -> {
-                             String str = input.getText().toString();
-                             info.setContractAddr(str);
-                             LockInfoDao dao = GreenDaoManager.getInstance().getDaoSession().getLockInfoDao();
-                             dao.update(info);
-                             contractAddr.setText(str);
-                             contractAddr.setClickable(false);
-                         })
-                         .setNegativeButton("取消", null).show();
-            });
+            contractAddr.setText("未激活");
+//            contractAddr.setOnClickListener(v -> {
+//                EditText input = new EditText(LockModifyActivity.this);
+//                 new AlertDialog.Builder(LockModifyActivity.this)
+//                         .setTitle("请输入激活序列！")
+//                         .setView(input)
+//                         .setPositiveButton("激活", (dialog, which) -> {
+//                             String str = input.getText().toString();
+//                             info.setContractAddr(str);
+//                             LockInfoDao dao = GreenDaoManager.getInstance().getDaoSession().getLockInfoDao();
+//                             dao.update(info);
+//                             contractAddr.setText(str);
+//                             contractAddr.setClickable(false);
+//                         })
+//                         .setNegativeButton("取消", null).show();
+//            });
         } else {
             contractAddr.setText(info.getContractAddr());
         }

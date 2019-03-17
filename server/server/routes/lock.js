@@ -20,6 +20,8 @@ router.get('/randomstr', LockControllers.getRandomStr);
 
 router.post('/record', LockControllers.addRecord);
 
+router.get('/record', LockControllers.getRecord);
+
 router.post('/import', LockControllers.genImportLock);
 
 router.put('/import', LockControllers.setImportLock);

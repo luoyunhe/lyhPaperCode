@@ -1,14 +1,14 @@
 import Web3 from 'web3';
 import fs from 'fs';
 import path from 'path';
-import {infuraUrl} from '../config';
+import { infuraUrl } from '../config';
 // const Web3 = require('web3');
 // const fs = require('fs');
 
-const abiFilePath = path.join(__dirname, 'locker_sol_Locker.abi'); 
+const abiFilePath = path.join(__dirname, 'locker_sol_Locker.abi');
 const abiStr = fs.readFileSync(abiFilePath, 'utf-8');
 const abi = JSON.parse(abiStr)
-let web3 = new Web3(infuraUrl);
+const web3 = new Web3(infuraUrl);
 
 async function getContractOwnerName(addr) {
     // if (!web3.isConnected()) {

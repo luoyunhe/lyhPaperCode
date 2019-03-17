@@ -1,7 +1,11 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose')
 
-const { Schema } = mongoose;
+const { Schema } = mongoose
 
+
+const connectionString = 'mongodb://111.231.244.208:27018';
+
+mongoose.connect(connectionString)
 mongoose.Promise = global.Promise;
 
 const lockSchema = new Schema({
@@ -30,4 +34,9 @@ userSchema.statics.findByName = function (name) {
 };
 
 
-export default mongoose.model('User', userSchema);
+const m = mongoose.model('User', userSchema);
+
+(async function () {
+    const lyh = await m.findByName('lyh')
+    console.log(lyh)
+})()

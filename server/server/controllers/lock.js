@@ -125,8 +125,66 @@ class LockControllers {
 
     async addRecord(ctx) {
         ctx.status = 200;
+        console.log(ctx.request.body)
+        const { body } = ctx.request;
+        const { address, timestamp, sign, name } = body;
+        const lockFound = await LockModel.find({ addr: address });
+        if (lockFound.length === 0) {
+            ctx.body = {
+                msg: "unknow address",
+                code: -1
+            };
+            return;
+        }
+        const { salt } = lockFound[0];
 
+        body.salt = salt;
 
+        const feilds = Object.keys(body)
+
+        feilds.sort()
+        let signStr = "";
+        for (let i = 0; i < feilds.length; i += 1) {
+            if (feilds[i] !== "sign") {
+                signStr = `${signStr + feilds[i]}=${body[feilds[i]]};`;
+            }
+        }
+        const md5 = crypto.createHash('md5')
+        const mySign = md5.update(signStr).digest("hex")
+        if (mySign === sign) {
+            ctx.body = {
+                code: 0,
+                msg: "success"
+            };
+            // console.log(lockFound[0].records)
+            lockFound[0].records.push({ name, timestamp: parseInt(timestamp, 10) });
+            lockFound[0].save();
+
+        } else {
+            ctx.body = {
+                code: -1,
+                msg: "error sign"
+            };
+        }
+    }
+
+    async getRecord(ctx) {
+        ctx.status = 200;
+        const { address } = ctx.query;
+        const lock = await LockModel.findOne({ addr: address });
+        console.log(lock)
+        if (!lock) {
+            ctx.body = {
+                msg: "unknow address",
+                code: -1
+            };
+            return;
+        }
+        ctx.body = {
+            code: 0,
+            msg: "success",
+            records: lock.records
+        }
     }
 
     async genImportLock(ctx) {
@@ -148,7 +206,7 @@ class LockControllers {
         ctx.status = 200;
         const { key } = ctx.request.body;
         const { passwd } = ctx.request.body;
-        const {activateStr} = ctx.request.body;
+        const { activateStr } = ctx.request.body;
         const valueStr = importLockCache.get(key)
         if (valueStr) {
             const value = JSON.parse(valueStr);
@@ -159,6 +217,7 @@ class LockControllers {
                 }
             }
             value.activateStr = activateStr;
+            // importLockCache.update(key, JSON.stringify(value), 1000 * 60 * 60 * 24);
             importLockCache.put(key, JSON.stringify(value), 1000 * 60 * 60 * 24);
             ctx.body = {
                 code: 0,
@@ -175,14 +234,15 @@ class LockControllers {
 
     async getImportLock(ctx) {
         ctx.status = 200;
-        const { key } = ctx.request.body;
+        const { key } = ctx.query;
         const valueStr = importLockCache.get(key);
+        console.log(valueStr);
         if (valueStr) {
             const value = JSON.parse(valueStr);
             if (value.activateStr !== '') {
                 ctx.body = {
                     code: 0,
-                    activateStr
+                    activateStr: value.activateStr
                 }
                 return
             }

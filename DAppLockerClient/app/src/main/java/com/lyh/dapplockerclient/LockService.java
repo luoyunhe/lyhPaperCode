@@ -1,5 +1,9 @@
 package com.lyh.dapplockerclient;
 
+import android.icu.text.AlphabeticIndex;
+
+import java.util.ArrayList;
+
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -25,7 +29,30 @@ public interface LockService {
 
     @PUT("/api/lock/import")
     Call<SetImportResp> setImport(@Body SetImportReq req);
+
+    @GET("/api/lock/import")
+    Call<GetImportResp> getImport(@Query("key") String key);
+
+    @GET("/api/lock/record")
+    Call<RecordResp> getRecord(@Query("address") String addr);
 }
+class RecordResp {
+    public int code;
+    public String msg;
+    static class Record {
+        public String name;
+        public long timestamp;
+    }
+    public ArrayList<Record> records;
+}
+
+
+class GetImportResp {
+    public int code;
+    public String activateStr;
+    public String msg;
+}
+
 class SetImportResp {
     public int code;
 }

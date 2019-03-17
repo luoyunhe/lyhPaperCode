@@ -4,6 +4,18 @@ const { Schema } = mongoose;
 
 mongoose.Promise = global.Promise;
 
+const recordSchema = new Schema({
+    name: {
+        type: String,
+        required: true
+    },
+    timestamp: {
+        type: Number,
+        required: true
+    }
+});
+
+
 const userSchema = new Schema({
     addr: {
         type: String,
@@ -12,7 +24,9 @@ const userSchema = new Schema({
     salt: {
         type: String,
         required: true
-    }
+    },
+    records: [recordSchema]
+
 });
 
 export default mongoose.model('Lock', userSchema);

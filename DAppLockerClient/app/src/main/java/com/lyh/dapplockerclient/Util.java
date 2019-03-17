@@ -22,13 +22,13 @@ import javax.crypto.Cipher;
 public class Util {
     public static final String USER_TOKEN_KEY = "user_token";
     public static final String USER_ETH_ADDR_KEY = "user_eth_addr";
-    public static final String WALLET_FILE_NAME = "wallet_file_name";
+    public static final String WALLET_FILE_NAME = "wallet_file_name1";
     public static final String LOCK_INFO_KEY = "lock_info";
     public static final String USER_INFO_KEY = "user_info";
     public static final String USER_PRI_KEY_KEY = "user_pri_key";
     public static final String USER_PUB_KEY_KEY = "user_pub_key";
 
-    public static final String BASE_URL = "https://172.16.0.37:9999";
+    public static final String BASE_URL = "https://172.16.0.5:9999";
 
 
     public static final String KEY_ALGORITHM = "RSA";

@@ -24,6 +24,9 @@ public class LockInfo implements Parcelable {
     @Property(nameInDb = "is_import")
     private boolean isImport;
 
+    @Property(nameInDb = "import_task_is")
+    private String importTaskId;
+
     public LockInfo(String name, String contractAddr, boolean isImport) {
         super();
         this.name = name;
@@ -33,12 +36,14 @@ public class LockInfo implements Parcelable {
 
     public LockInfo(){super();}
 
-    @Generated(hash = 442212399)
-    public LockInfo(Long id, String name, String contractAddr, boolean isImport) {
+    @Generated(hash = 154367389)
+    public LockInfo(Long id, String name, String contractAddr, boolean isImport,
+            String importTaskId) {
         this.id = id;
         this.name = name;
         this.contractAddr = contractAddr;
         this.isImport = isImport;
+        this.importTaskId = importTaskId;
     }
 
     public String getName() {
@@ -76,6 +81,7 @@ public class LockInfo implements Parcelable {
         dest.writeString(name);
         dest.writeString(contractAddr);
         dest.writeByte((byte) (isImport ? 1 : 0));
+        dest.writeString(importTaskId);
     }
     public static final Parcelable.Creator<LockInfo> CREATOR = new Creator<LockInfo>() {
 
@@ -86,6 +92,7 @@ public class LockInfo implements Parcelable {
             info.setName(source.readString());
             info.setContractAddr(source.readString());
             info.setImport(source.readByte() != 0);
+            info.setImportTaskId(source.readString());
             return info;
         }
 
@@ -109,5 +116,13 @@ public class LockInfo implements Parcelable {
 
     public void setIsImport(boolean isImport) {
         this.isImport = isImport;
+    }
+
+    public String getImportTaskId() {
+        return importTaskId;
+    }
+
+    public void setImportTaskId(String importTaskId) {
+        this.importTaskId = importTaskId;
     }
 }
