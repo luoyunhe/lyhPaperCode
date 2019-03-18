@@ -35,6 +35,7 @@ class LockControllers {
                 code: -1,
                 msg: "Authentication Error"
             }
+            return
         }
 
         console.log(userName);
