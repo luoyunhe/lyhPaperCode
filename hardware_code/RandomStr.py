@@ -21,7 +21,7 @@ class RandomStr(threading.Thread):
             msg = Msg(msgType=MsgType.RandomStr, load=ranStr)
             logging.info("random str thread put: " + ranStr)
             self.queue.put(msg)
-            time.sleep(2 * 60)
+            time.sleep(60)
 
     def stopThread(self):
         self.running = False

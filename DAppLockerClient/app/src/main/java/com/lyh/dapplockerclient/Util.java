@@ -28,7 +28,7 @@ public class Util {
     public static final String USER_PRI_KEY_KEY = "user_pri_key";
     public static final String USER_PUB_KEY_KEY = "user_pub_key";
 
-    public static final String BASE_URL = "https://172.16.0.5:9999";
+    public static final String BASE_URL = "https://111.231.244.208:9999";
 
 
     public static final String KEY_ALGORITHM = "RSA";

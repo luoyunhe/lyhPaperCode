@@ -7,6 +7,8 @@ import logging
 import grpc
 import lock_pb2
 import lock_pb2_grpc
+import threading
+import time
 
 import requests
 from Crypto.PublicKey import RSA
@@ -17,6 +19,50 @@ from Msg import MsgType
 from ScanQRCode import ScanQRCode
 from Web3Thread import Web3Thread
 from RandomStr import RandomStr
+
+import RPi.GPIO as GPIO
+
+BLUE_LED = 24
+RED_LED = 23
+BTN = 18
+
+class GPIOCtrl:
+    def __init__(self):
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(BTN, GPIO.IN)
+        GPIO.setup(BLUE_LED, GPIO.OUT)
+        GPIO.setup(RED_LED, GPIO.OUT)
+        self.red_pwm = GPIO.PWM(RED_LED, 2)
+        GPIO.output(BLUE_LED, GPIO.HIGH)
+        self.is_bind_status = False
+        GPIO.add_event_detect(BTN, GPIO.FALLING, callback=self.on_btn_down, bouncetime=200)
+
+    def switch_to_normal_state(self):
+        #self.blue_pwm.stop()
+        self.red_pwm.ChangeDutyCycle(100)
+        self.is_bind_status = False
+        print("hello")
+
+
+
+
+    def on_btn_down(self, channel):
+        if self.is_bind_status:
+            print("return")
+            return
+        #self.blue_pwm.start(50)
+        self.red_pwm.start(50)
+        self.is_bind_status = True
+        threading.Timer(30, self.switch_to_normal_state).start()
+        print("btn down")
+        # GPIO.output(BLUE_LED, GPIO.LOW)
+
+
+
+
+def turn_off_blue_led():
+    GPIO.output(BLUE_LED, GPIO.HIGH)
+
 
 
 class LockDB:
@@ -45,10 +91,9 @@ class LockDB:
     def close(self):
         self.db.close()
 
-
 DB_NAME = "db.txt"
 SERVER_URL = "localhost:9999"
-BASE_URL = "https://172.16.0.103:9999"
+BASE_URL = "https://111.231.244.208:9999"
 
 
 def decodeUserInfo(userInfo):
@@ -59,22 +104,44 @@ def decodeUserInfo(userInfo):
         userMap[addr.lower()] = [names[index], pubKeys[index]]
     return userMap
 
-
-def rsa_signverify(message, signature):
+def rsa_signverify(message,signature):
     public_key = RSA.importKey(open("my_rsa_public.pem").read())
     try:
         pkcs1_15.new(public_key).verify(message, base64.b64decode(signature))
         print('The signature is valid.')
         return True
-    except (ValueError, TypeError):
+    except (ValueError,TypeError):
         print('The signature is invalid.')
 
+# def decryptSign(rpc, pubKey, sign):
+#     logging("rpc call decrypt begin...")
+#     resp = rpc.decrypt(lock_pb2.Request(pubKey=pubKey, sign=sign))
+#     logging("rpc call decrypt end...")
+#     return resp.ranStr
 
-def openDoor():
+def openDoor(name, addr, salt):
+    data = {}
+    data["address"] = addr
+    data["name"] = name
+    data["salt"] = salt
+    data["timestamp"] = str(int(time.time()))
+    signStr = ""
+    for k in sorted(data.keys()):
+        signStr = signStr + k + "=" + data[k] + ";"
+    md5 = hashlib.md5()
+    md5.update(signStr.encode(encoding="utf-8"))
+    data["sign"] = md5.hexdigest()
+    data.pop("salt")
+    requests.post(url=BASE_URL + "/api/lock/record", data=data, verify=False)
+    GPIO.output(BLUE_LED, GPIO.LOW)
+    threading.Timer(10, turn_off_blue_led).start()
+
+
     logging.error("open door...")
 
-
 def main():
+    gpio_ctrl = GPIOCtrl()
+#    openDoor("dd", "djf", "dkkd")
 
     q = queue.Queue(100)
     scanQRCodeThread = ScanQRCode(q=q)
@@ -88,9 +155,12 @@ def main():
     channel = grpc.insecure_channel("localhost:50000")
     stub = lock_pb2_grpc.LockStub(channel)
 
+
+
     if info.get("contractAddr"):
         web3Thread = Web3Thread(address=info["contractAddr"], q=q)
         web3Thread.start()
+
 
     userMap = info.get("userMap", {})
 
@@ -112,7 +182,7 @@ def main():
             salt = codeInfo.get("salt")
             address = codeInfo.get("addr")
             sign = codeInfo.get("sign")
-            if salt and address:
+            if gpio_ctrl.is_bind_status and salt and address:
                 info["salt"] = salt
                 info["contractAddr"] = address
                 db.update(info)
@@ -133,15 +203,17 @@ def main():
                     decryptStr = ""
                     resp = ""
                     try:
-                        resp = stub.decrypt(
-                            lock_pb2.Request(pubKey=pubKey, sign=sign))
+                        resp = stub.decrypt(lock_pb2.Request(pubKey=pubKey, sign=sign))
                     except Exception as e:
                         logging.info(e)
                         continue
                     scanRanStr = resp.ranStr
                     logging.info("decrypt str: " + scanRanStr)
                     if cache.has(scanRanStr):
-                        openDoor()
+                        openDoor(infoList[0], info.get("contractAddr", ""),info.get("salt", ""))
+
+
+
 
         elif msg.msgType == MsgType.ETH_UPDATE:
             userMap = decodeUserInfo(msg.load)
@@ -164,11 +236,16 @@ def main():
                 md5.update(signStr.encode(encoding="utf-8"))
                 data["sign"] = md5.hexdigest()
                 data.pop("salt")
-                requests.post(url=BASE_URL + "/api/lock/randomstr",
-                              data=data, verify=False)
+                requests.post(url=BASE_URL + "/api/lock/randomstr", data=data, verify=False)
+
+
+
+
 
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s-%(pathname)s[line:%(lineno)d]-%(levelname)s: %(message)s',
                         level=logging.INFO)
     main()
+
+
