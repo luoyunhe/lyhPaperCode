@@ -267,7 +267,13 @@ public class LockModifyActivity extends AppCompatActivity {
             String importInfoStr = pairs[0].first[0];
             String contractAddr = pairs[0].first[1];
             Credentials credentials = pairs[0].second;
-            ImportInfo info = JSON.parseObject(importInfoStr, ImportInfo.class);
+            ImportInfo info = null;
+            try {
+                info = JSON.parseObject(importInfoStr, ImportInfo.class);
+            }
+            catch ( Exception e ) {
+                return "error";
+            }
             HttpService httpService =  new HttpService(Web3jUtil.INFURA_URL);
             Web3j web3 = Web3j.build(httpService);
             Locker_sol_Locker contract = Locker_sol_Locker.load(contractAddr, web3, credentials, new DefaultGasProvider());
@@ -303,6 +309,14 @@ public class LockModifyActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
+            if (s != null && s.equals("error")) {
+                isRunning = false;
+                new AlertDialog.Builder(LockModifyActivity.this)
+                        .setTitle("error")
+                        .setMessage("导入序列不合法")
+                        .show();
+                return;
+            }
             isRunning = false;
             new AlertDialog.Builder(LockModifyActivity.this)
                     .setTitle("请复制激活序列给该用户！")
